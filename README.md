@@ -1,33 +1,33 @@
 # QRP Web (QRP_APP)
 
-Aplikacja **Django** – rejestrator jakości (**QRP**) na stanowiskach przy liniach produkcyjnych. Operatorzy logują się (RFID lub ręcznie), rejestrują **pomiary** i **wady**, przeglądają **archiwum**; dane są zapisywane lokalnie w **SQLite** i mogą być wysyłane do **serwera centralnego** (QRP_LOCAL) przez HTTP API. Panel administracyjny służy do konfiguracji rejestratorów, linii, typów kontroli, użytkowników oraz eksportu/importu ustawień.
+**Django** web application – a quality **QRP** station recorder for production lines. Operators sign in (RFID or manually), register **measurements** and **defects**, browse the **archive**; data is stored locally in **SQLite** and can be sent to a **central server** (QRP_LOCAL) over HTTP API. The Django admin is used to configure registrars, lines, control types, users, and JSON settings export/import.
 
-Szczegółowa dokumentacja techniczna (endpointy, synchronizacja, integracja z QRP_LOCAL): [`DOCUMENTACJA_QRP_SYSTEM.md`](DOCUMENTACJA_QRP_SYSTEM.md).
-
----
-
-## Działanie w skrócie
-
-| Obszar | Opis |
-|--------|------|
-| **Logowanie** | Strona RFID (`/`), API logowania i rejestracji kart; opcjonalnie numer KJ w zależności od rejestratora. |
-| **Pomiary / wady** | Formularze z linią, typem kontroli, rodzajem testu, numerem zlecenia, zdjęciem i komentarzem. |
-| **Archiwum** | Lista zapisów, filtry, eksport CSV/PDF, widok „poczekalni” rekordów niewysłanych do API. |
-| **Synchronizacja** | Po zapisie oraz cyklicznie (scheduler) wysyłka do API centralnego; ponawianie przy błędach. |
-| **Eksport CSV** | Opcjonalnie pliki CSV w katalogu skonfigurowanym w ustawieniach (format pod zewnętrzne systemy). |
-| **Bezpieczeństwo** | Middleware: dozwolone IP (`AllowedIP`), routing po hostname/DNS do wybranej linii. |
-| **Admin** | Konfiguracja całego systemu, import kart RFID z CSV/XLSX, eksport/import ustawień JSON (**bez** listy użytkowników Django w tym pliku). |
+Technical reference (endpoints, sync, QRP_LOCAL integration): [`DOCUMENTATION_QRP_SYSTEM.md`](DOCUMENTATION_QRP_SYSTEM.md).
 
 ---
 
-## Wymagania
+## Overview
 
-- Python **3.10+** (zalecane 3.11 lub 3.12)
-- Zależności z pliku [`requirements.txt`](requirements.txt)
+| Area | Description |
+|------|-------------|
+| **Sign-in** | RFID page (`/`), login and card registration APIs; optional KJ number depending on registrar settings. |
+| **Measurements / defects** | Forms with line, control type, test type, work order number, photo, and comment. |
+| **Archive** | Record list, filters, CSV/PDF export, “pending queue” for records not yet sent to the API. |
+| **Synchronisation** | After save and on a schedule (background scheduler) to the central API; retries on errors. |
+| **CSV export** | Optional CSV files in a configured folder (format for downstream systems). |
+| **Security** | Middleware: allowed IPs (`AllowedIP`), hostname/DNS routing to the selected line. |
+| **Admin** | Full system configuration, RFID card import from CSV/XLSX, JSON settings export/import (**does not** include the Django user list in that file). |
 
 ---
 
-## Instalacja lokalna
+## Requirements
+
+- Python **3.10+** (3.11 or 3.12 recommended)
+- Dependencies from [`requirements.txt`](requirements.txt)
+
+---
+
+## Local setup
 
 ```bash
 cd QRP_APP
@@ -36,99 +36,99 @@ source .venv/bin/activate          # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 python manage.py migrate
 python manage.py createsuperuser
-python manage.py collectstatic --noinput   # opcjonalnie, pod produkcję
+python manage.py collectstatic --noinput   # optional, for production-style static files
 ```
 
-Uruchomienie serwera deweloperskiego:
+Run the development server:
 
 ```bash
 python manage.py runserver 0.0.0.0:8000
 ```
 
-- Aplikacja WWW: `http://127.0.0.1:8000/`
-- Panel admina: `http://127.0.0.1:8000/admin/`
+- Web app: `http://127.0.0.1:8000/`
+- Admin: `http://127.0.0.1:8000/admin/`
 
 ---
 
-## Zmienne środowiskowe (opcjonalnie)
+## Environment variables (optional)
 
-| Zmienna | Opis |
-|---------|------|
-| `SECRET_KEY` | Klucz Django (w produkcji **obowiązkowo** własny). |
-| `DEBUG` | Konfiguracja w `qrp_project/settings.py` (domyślnie zależna od `DEBUG` w środowisku). |
-| `ALLOWED_HOSTS` | Lista hostów po przecinku (domyślnie m.in. `localhost`, `127.0.0.1`). |
+| Variable | Description |
+|----------|-------------|
+| `SECRET_KEY` | Django secret key (use your **own** value in production). |
+| `DEBUG` | Controlled in `qrp_project/settings.py` (depends on the `DEBUG` environment variable by default). |
+| `ALLOWED_HOSTS` | Comma-separated host list (defaults include `localhost`, `127.0.0.1`). |
 
 ---
 
-## Podmiana bazy SQLite a użytkownicy
+## Replacing the SQLite database and keeping users
 
-Eksport ustawień z admina **nie** zawiera kont Django. Po wgraniu nowego pliku `db.sqlite3` możesz przenieść użytkowników i karty RFID ze starej kopii bazy:
+Admin settings export **does not** include Django user accounts. After replacing `db.sqlite3`, you can copy users and RFID cards from a backup of the old database:
 
 ```bash
-cp db.sqlite3 db_backup.sqlite3          # kopia starej bazy
-# … podmiana db.sqlite3, migrate …
+cp db.sqlite3 db_backup.sqlite3          # backup of old DB
+# … replace db.sqlite3, run migrate …
 python manage.py copy_users_from_db db_backup.sqlite3
 ```
 
-Szczegóły: `python manage.py copy_users_from_db --help`.
+See: `python manage.py copy_users_from_db --help`.
 
 ---
 
-## Publikacja w repozytorium GitHub
+## Publishing to GitHub
 
-Repozytorium docelowe: **https://github.com/radekTflutter/qrp_web.git**
+Target repository: **https://github.com/radekTflutter/qrp_web.git**
 
-### 1. Utwórz repozytorium na GitHubie (jeśli jeszcze nie istnieje)
+### 1. Create the GitHub repository (if it does not exist yet)
 
-- Wejdź na GitHub → **New repository**.
-- Nazwa np. `qrp_web`, **bez** automatycznego README (albo potem `git pull` z `--allow-unrelated-histories`, jeśli dodasz README na stronie).
+- GitHub → **New repository**.
+- Name e.g. `qrp_web`, **without** auto-generated README (or later use `git pull` with `--allow-unrelated-histories` if you add a README on the website).
 
-### 2. Zainicjuj Git w katalogu projektu
+### 2. Initialise Git in the project folder
 
 ```bash
-cd /ścieżka/do/QRP_APP
+cd /path/to/QRP_APP
 git init
 git add .
-git commit -m "Initial commit: QRP Web (Django rejestrator QRP)"
+git commit -m "Initial commit: QRP Web (Django QRP station)"
 git branch -M main
 ```
 
-### 3. Połącz z GitHubem i wypchnij kod
+### 3. Add the remote and push
 
 ```bash
 git remote add origin https://github.com/radekTflutter/qrp_web.git
 git push -u origin main
 ```
 
-Przy pierwszym `git push` GitHub poprosi o logowanie (token osobisty **PAT** zamiast hasła lub **GitHub CLI**).
+The first `git push` usually requires authentication (a **personal access token** instead of a password, or **GitHub CLI**).
 
-### 4. Jeśli repozytorium na GitHubie już ma commity (np. README utworzony na stronie)
+### 4. If the remote already has commits (e.g. README created on GitHub)
 
 ```bash
 git remote add origin https://github.com/radekTflutter/qrp_web.git
 git fetch origin
 git merge origin/main --allow-unrelated-histories
-# rozwiąż ewentualne konflikty, potem:
+# resolve any conflicts, then:
 git push -u origin main
 ```
 
-### 5. Czego nie wysyłać do repozytorium
+### 5. What not to commit
 
-Plik [`.gitignore`](.gitignore) wyklucza m.in.: `db.sqlite3`, `media/`, `staticfiles/`, `.env`, wirtualne środowisko. **Nie commituj** sekretów (`SECRET_KEY`, tokeny API) – używaj zmiennych środowiskowych lub wpisów tylko lokalnie w bazie po wdrożeniu.
-
----
-
-## Struktura katalogów (skrót)
-
-| Element | Opis |
-|---------|------|
-| `qrp_project/` | Ustawienia Django (`settings.py`, `urls.py`, `wsgi.py`). |
-| `qrp_app/` | Modele, widoki, synchronizacja, CSV, middleware, komendy `manage.py`. |
-| `templates/` | Szablony admina (import ustawień itd.). |
-| `static/` | Statyczne assety aplikacji. |
+[`.gitignore`](.gitignore) excludes e.g. `db.sqlite3`, `media/`, `staticfiles/`, `.env`, virtual environments. **Do not commit** secrets (`SECRET_KEY`, API tokens) – use environment variables or configure secrets only after deployment.
 
 ---
 
-## Licencja / własność
+## Directory layout (short)
 
-Repozytorium i użycie zgodnie z polityką Twojej organizacji. Uzupełnij ten fragment, jeśli potrzebujesz jawnej licencji (np. MIT, własnościowa).
+| Path | Description |
+|------|-------------|
+| `qrp_project/` | Django project settings (`settings.py`, `urls.py`, `wsgi.py`). |
+| `qrp_app/` | Models, views, sync, CSV, middleware, `manage.py` commands. |
+| `templates/` | Admin templates (settings import, etc.). |
+| `static/` | Application static assets. |
+
+---
+
+## License / ownership
+
+Repository use is subject to your organisation’s policy. Add an explicit licence here if needed (e.g. MIT, proprietary).
