@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QRP - QC Platform</title>
+    <link rel="icon" type="image/svg+xml" href="{% static 'qrp_app/favicon.svg' %}">
+    <link rel="icon" type="image/svg+xml" sizes="any" href="{% static 'qrp_app/favicon.svg' %}">
+    <link rel="shortcut icon" type="image/svg+xml" href="{% static 'qrp_app/favicon.svg' %}">
+    <link rel="apple-touch-icon" href="{% static 'qrp_app/favicon.svg' %}">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --navbar-offset: 72px; /* fallback; JS ustawia realną wysokość */
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 50%, #e2e8f0 100%);
+            min-height: 100vh;
+            transition: background 0.3s ease;
+            padding-top: var(--navbar-offset);
+        }
+
+        body.dark-mode {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+            color: #e2e8f0;
+        }
+
+        .navbar {
+            background: #1e293b;
+            border-bottom: 1px solid #334155;
+            padding: 1rem 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 2000;
+        }
+
+        .navbar-left {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .navbar h1 {
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: white;
+            letter-spacing: -0.025em;
+        }
+
+        .navbar-brand span {
+            color: #cbd5e1;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .nav-link {
+            color: #cbd5e1;
+            text-decoration: none;
+            padding: 0.625rem 1.25rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .nav-link.active {
+            background: linear-gradient(135deg, #06b6d4 0%, #2563eb 100%);
+            color: white;
+        }
+
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            gap: 0.375rem;
+            cursor: pointer;
+            padding: 0.5rem;
+        }
+
+        .hamburger span {
+            width: 25px;
+            height: 3px;
+            background: white;
+            border-radius: 2px;
+            transition: all 0.3s;
+        }
+
+        .hamburger.active span:nth-child(1) {
+            transform: rotate(45deg) translate(7px, 7px);
+        }
+
+        .hamburger.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .hamburger.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(7px, -7px);
+        }
+
+        .mobile-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #1e293b;
+            border-top: 1px solid #334155;
+            padding: 1rem;
+            flex-direction: column;
+            gap: 0.5rem;
+            z-index: 1000;
+        }
+
+        .mobile-menu.show {
+            display: flex;
+        }
+
+        .mobile-menu .nav-link {
+            width: 100%;
+            text-align: center;
+        }
+
+        .navbar-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            position: relative;
+        }
+
+        .user-name {
+            color: #cbd5e1;
+            font-size: 0.875rem;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #06b6d4 0%, #2563eb 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .user-avatar:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(6, 182, 212, 0.4);
+        }
+
+        .user-avatar::before {
+            content: attr(data-name);
+            position: absolute;
+            bottom: -45px;
+            right: 0;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        .user-avatar::after {
+            content: '';
+            position: absolute;
+            bottom: -7px;
+            right: 12px;
+            width: 0;
+            height: 0;
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+            border-bottom: 6px solid rgba(0, 0, 0, 0.9);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        .user-avatar:hover::before,
+        .user-avatar:hover::after {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .user-menu {
+            position: absolute;
+            top: 55px;
+            right: 0;
+            background: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            padding: 0.75rem;
+            width: 280px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s;
+            z-index: 1000;
+            border: 1px solid #e2e8f0;
+        }
+
+        body.dark-mode .user-menu {
+            background: #1e293b;
+            border-color: #334155;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+        }
+
+        .user-menu.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .user-menu-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            border-bottom: 1px solid #e2e8f0;
+            margin-bottom: 0.5rem;
+        }
+
+        body.dark-mode .user-menu-header {
+            border-bottom-color: #334155;
+        }
+
+        .user-menu-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #06b6d4 0%, #2563eb 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.25rem;
+        }
+
+        .user-menu-info {
+            flex: 1;
+        }
+
+        .user-menu-name {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 0.125rem;
+        }
+
+        body.dark-mode .user-menu-name {
+            color: #e2e8f0;
+        }
+
+        .user-menu-email {
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+
+        body.dark-mode .user-menu-email {
+            color: #94a3b8;
+        }
+
+        .user-menu-actions {
+            padding: 0.5rem 0;
+        }
+
+        .user-menu-button {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            background: transparent;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #334155;
+            text-align: left;
+        }
+
+        body.dark-mode .user-menu-button {
+            color: #e2e8f0;
+        }
+
+        .user-menu-button:hover {
+            background: #f1f5f9;
+        }
+
+        body.dark-mode .user-menu-button:hover {
+            background: #334155;
+        }
+
+        .user-menu-button.admin {
+            color: #2563eb;
+        }
+
+        .user-menu-button.logout {
+            color: #dc2626;
+        }
+
+        .user-menu-button.logout:hover {
+            background: #fef2f2;
+        }
+
+        .user-menu-icon {
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        @media (max-width: 900px) {
+            .nav-menu {
+                display: none;
+            }
+
+            .hamburger {
+                display: flex;
+            }
+
+            .user-name {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+        }
+
+        @media (max-height: 900px) and (orientation: portrait) {
+            .navbar {
+                padding: 0.75rem 1rem;
+            }
+
+            .container {
+                padding: 1rem;
+            }
+
+            .navbar h1 {
+                font-size: 1.25rem;
+            }
+
+            .navbar-brand span {
+                font-size: 0.75rem;
+            }
+        }
+
+        @media (max-height: 700px) {
+            .navbar {
+                padding: 0.5rem 1rem;
+            }
+
+            .container {
+                padding: 0.75rem;
+            }
+        }
+        /* Dark mode styles dla wspólnych elementów */
+        body.dark-mode .container {
+            color: #e2e8f0;
+        }
+
+        body.dark-mode .panel,
+        body.dark-mode .page-header,
+        body.dark-mode .filters-panel,
+        body.dark-mode .results-panel {
+            background: #1e293b;
+            color: #e2e8f0;
+            border-color: #334155;
+        }
+
+        body.dark-mode h1,
+        body.dark-mode h2,
+        body.dark-mode h3 {
+            color: #e2e8f0;
+        }
+
+        body.dark-mode .nav-link {
+            color: #cbd5e1;
+        }
+
+        body.dark-mode .nav-link:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        body.dark-mode input,
+        body.dark-mode select,
+        body.dark-mode textarea {
+            background: #0f172a;
+            border-color: #475569;
+            color: #e2e8f0;
+        }
+
+        body.dark-mode input:focus,
+        body.dark-mode select:focus,
+        body.dark-mode textarea:focus {
+            background: #1e293b;
+            border-color: #06b6d4;
+        }
+
+        body.dark-mode table {
+            color: #e2e8f0;
+        }
+
+        body.dark-mode thead {
+            background: #0f172a;
+        }
+
+        body.dark-mode th {
+            color: #94a3b8;
+            border-color: #334155;
+        }
+
+        body.dark-mode td {
+            color: #e2e8f0;
+            border-color: #334155;
+        }
+
+        body.dark-mode tbody tr:hover {
+            background: #334155;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+    {% block extrahead %}{% endblock %}
+</head>
+<body>
+    <div class="navbar">
+        <div class="navbar-left">
+            <div class="navbar-brand">
+                <h1>QRP</h1>
+                <span>QC Platform</span>
+            </div>
+            <nav class="nav-menu">
+                <a href="{% url 'qrp_app:measurement' %}" class="nav-link {% if request.resolver_match.url_name == 'measurement' %}active{% endif %}">Rejestracja Pomiarów</a>
+                <a href="{% url 'qrp_app:defect' %}" class="nav-link {% if request.resolver_match.url_name == 'defect' %}active{% endif %}">Rejestracja Wad</a>
+                <a href="{% url 'qrp_app:archive' %}" class="nav-link {% if request.resolver_match.url_name == 'archive' %}active{% endif %}">Archiwum</a>
+                <a href="{% url 'qrp_app:help' %}" class="nav-link {% if request.resolver_match.url_name == 'help' %}active{% endif %}">Pomoc</a>
+            </nav>
+            <div class="hamburger" id="hamburger" onclick="toggleMobileMenu()">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+        <div class="navbar-right">
+            {% if user.is_authenticated %}
+            <span class="user-name">{{ user.get_full_name|default:user.username }}</span>
+            <div class="user-avatar" data-name="{{ user.get_full_name|default:user.username }}" id="userAvatar" onclick="toggleUserMenu()">
+                {{ user.get_full_name|default:user.username|first|upper }}{% if user.last_name %}{{ user.last_name|first|upper }}{% endif %}
+            </div>
+            
+            <div class="user-menu" id="userMenu">
+                <div class="user-menu-header">
+                    <div class="user-menu-avatar">
+                        {{ user.get_full_name|default:user.username|first|upper }}{% if user.last_name %}{{ user.last_name|first|upper }}{% endif %}
+                    </div>
+                    <div class="user-menu-info">
+                        <div class="user-menu-name">{{ user.get_full_name|default:user.username }}</div>
+                        <div class="user-menu-email">{{ user.username }}</div>
+                    </div>
+                </div>
+                <div class="user-menu-actions">
+                    <button class="user-menu-button" id="themeToggle" onclick="toggleTheme()">
+                        <svg class="user-menu-icon" id="themeIcon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                        </svg>
+                        <span id="themeText">Tryb ciemny</span>
+                    </button>
+                    <button class="user-menu-button logout" onclick="handleLogout()">
+                        <svg class="user-menu-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        </svg>
+                        Wyloguj się
+                    </button>
+                </div>
+            </div>
+            {% else %}
+            <a href="{% url 'qrp_app:rfid_login' %}" style="color: #cbd5e1; text-decoration: none; padding: 0.625rem 1.25rem; border-radius: 0.5rem; font-size: 0.875rem; font-weight: 600; transition: all 0.3s;" onmouseover="this.style.background='rgba(255, 255, 255, 0.1)'; this.style.color='white';" onmouseout="this.style.background='transparent'; this.style.color='#cbd5e1';">Zaloguj</a>
+            {% endif %}
+        </div>
+
+        <div class="mobile-menu" id="mobileMenu">
+            <a href="{% url 'qrp_app:measurement' %}" class="nav-link {% if request.resolver_match.url_name == 'measurement' %}active{% endif %}" onclick="toggleMobileMenu()">Rejestracja Pomiarów</a>
+            <a href="{% url 'qrp_app:defect' %}" class="nav-link {% if request.resolver_match.url_name == 'defect' %}active{% endif %}" onclick="toggleMobileMenu()">Rejestracja Wad</a>
+            <a href="{% url 'qrp_app:archive' %}" class="nav-link {% if request.resolver_match.url_name == 'archive' %}active{% endif %}" onclick="toggleMobileMenu()">Archiwum</a>
+            <a href="{% url 'qrp_app:help' %}" class="nav-link {% if request.resolver_match.url_name == 'help' %}active{% endif %}" onclick="toggleMobileMenu()">Pomoc</a>
+        </div>
+    </div>
+
+    {% block content %}{% endblock %}
+
+        {% csrf_token %}
+        <script>
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const parts = document.cookie.split(';');
+                for (let i = 0; i < parts.length; i++) {
+                    const part = parts[i].trim();
+                    if (part.indexOf(name + '=') === 0) {
+                        cookieValue = decodeURIComponent(part.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        function getCSRFToken() {
+            // Preferuj ciasteczko – przy auto-logout pole w formularzu może być nieaktualne (403 CSRF)
+            const fromCookie = getCookie('csrftoken');
+            if (fromCookie) return fromCookie;
+            const input = document.querySelector('[name=csrfmiddlewaretoken]');
+            if (input && input.value) return input.value;
+            return '';
+        }
+
+        function toggleUserMenu() {
+            const menu = document.getElementById('userMenu');
+            menu.classList.toggle('show');
+        }
+
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileMenu');
+            const hamburger = document.getElementById('hamburger');
+            menu.classList.toggle('show');
+            hamburger.classList.toggle('active');
+        }
+
+        document.addEventListener('click', function(event) {
+            const menu = document.getElementById('userMenu');
+            const avatar = document.getElementById('userAvatar');
+            if (menu && avatar && !menu.contains(event.target) && !avatar.contains(event.target)) {
+                menu.classList.remove('show');
+            }
+        });
+
+        function handleLogout() {
+            showConfirmDialog('Czy na pewno chcesz się wylogować?', () => {
+                const token = getCSRFToken();
+                if (token) {
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = '{% url "qrp_app:logout" %}';
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'csrfmiddlewaretoken';
+                    input.value = token;
+                    form.appendChild(input);
+                    document.body.appendChild(form);
+                    form.submit();
+                } else {
+                    window.location.href = '{% url "qrp_app:logout" %}';
+                }
+            });
+        }
+
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            localStorage.setItem('darkMode', isDark);
+            updateThemeIcon(isDark);
+        }
+
+        function updateThemeIcon(isDark) {
+            const icon = document.getElementById('themeIcon');
+            const text = document.getElementById('themeText');
+            if (icon && text) {
+                if (isDark) {
+                    icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />';
+                    text.textContent = 'Tryb jasny';
+                } else {
+                    icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />';
+                    text.textContent = 'Tryb ciemny';
+                }
+            }
+        }
+
+        // Załaduj preferowany tryb przy starcie
+        document.addEventListener('DOMContentLoaded', function() {
+            // Ustaw realną wysokość navbara jako offset dla całej strony
+            const navbar = document.querySelector('.navbar');
+            const setNavbarOffset = () => {
+                if (!navbar) return;
+                document.documentElement.style.setProperty('--navbar-offset', `${navbar.offsetHeight}px`);
+            };
+            setNavbarOffset();
+            window.addEventListener('resize', setNavbarOffset);
+
+            const darkMode = localStorage.getItem('darkMode') === 'true';
+            if (darkMode) {
+                document.body.classList.add('dark-mode');
+                updateThemeIcon(true);
+            }
+        });
+
+        // System powiadomień
+        function showNotification(message, type = 'info', duration = 3000) {
+            const notification = document.createElement('div');
+            notification.className = `ui-notification ui-notification-${type}`;
+            
+            const icons = {
+                success: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />',
+                error: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />',
+                info: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />',
+                warning: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />'
+            };
+            
+            notification.innerHTML = `
+                <div class="ui-notification-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        ${icons[type] || icons.info}
+                    </svg>
+                </div>
+                <span class="ui-notification-message">${message}</span>
+                <button class="ui-notification-close" onclick="this.parentElement.remove()">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Animacja wejścia
+            setTimeout(() => notification.classList.add('show'), 10);
+            
+            if (duration > 0) {
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                    setTimeout(() => notification.remove(), 300);
+                }, duration);
+            }
+        }
+
+        function showSuccessNotification(message, duration = 3000) {
+            showNotification(message, 'success', duration);
+        }
+
+        function showErrorNotification(message, duration = 5000) {
+            showNotification(message, 'error', duration);
+        }
+
+        function showInfoNotification(message, duration = 3000) {
+            showNotification(message, 'info', duration);
+        }
+
+        function showWarningNotification(message, duration = 4000) {
+            showNotification(message, 'warning', duration);
+        }
+
+        function showConfirmDialog(message, onConfirm, onCancel = null) {
+            const overlay = document.createElement('div');
+            overlay.className = 'ui-dialog-overlay';
+            
+            const dialog = document.createElement('div');
+            dialog.className = 'ui-dialog';
+            dialog.innerHTML = `
+                <div class="ui-dialog-content">
+                    <div class="ui-dialog-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <div class="ui-dialog-message"></div>
+                </div>
+                <div class="ui-dialog-actions">
+                    <button class="ui-dialog-button ui-dialog-button-secondary" id="dialogCancel">Anuluj</button>
+                    <button class="ui-dialog-button ui-dialog-button-primary" id="dialogConfirm">Potwierdź</button>
+                </div>
+            `;
+            
+            overlay.appendChild(dialog);
+            document.body.appendChild(overlay);
+            
+            // Ustaw wiadomość (obsługuje HTML)
+            const messageElement = dialog.querySelector('.ui-dialog-message');
+            if (messageElement) {
+                messageElement.innerHTML = message;
+            }
+            
+            const cancelBtn = dialog.querySelector('#dialogCancel');
+            const confirmBtn = dialog.querySelector('#dialogConfirm');
+            
+            cancelBtn.addEventListener('click', () => {
+                if (onCancel && typeof onCancel === 'function') onCancel();
+                overlay.remove();
+            });
+            
+            confirmBtn.addEventListener('click', () => {
+                if (onConfirm && typeof onConfirm === 'function') onConfirm();
+                overlay.remove();
+            });
+            
+            // Zamykanie po kliknięciu poza dialogiem
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    if (onCancel && typeof onCancel === 'function') onCancel();
+                    overlay.remove();
+                }
+            });
+            
+            // Animacja wejścia
+            setTimeout(() => overlay.classList.add('show'), 10);
+            
+            // Focus na przycisku potwierdzenia
+            setTimeout(() => {
+                if (confirmBtn) confirmBtn.focus();
+            }, 100);
+        }
+    </script>
+    <style>
+        /* System powiadomień */
+        .ui-notification {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            padding: 1.25rem 1.75rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            min-width: 300px;
+            max-width: 500px;
+            transform: translateX(400px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            pointer-events: auto;
+        }
+
+        .ui-notification.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .ui-notification-success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+
+        .ui-notification-error {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+        }
+
+        .ui-notification-info {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+        }
+
+        .ui-notification-warning {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+        }
+
+        .ui-notification-icon {
+            width: 32px;
+            height: 32px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .ui-notification-icon svg {
+            width: 20px;
+            height: 20px;
+            stroke-width: 3;
+        }
+
+        .ui-notification-message {
+            flex: 1;
+            font-size: 0.9375rem;
+            font-weight: 500;
+            line-height: 1.5;
+        }
+
+        .ui-notification-close {
+            background: transparent;
+            border: none;
+            color: rgba(255, 255, 255, 0.8);
+            cursor: pointer;
+            padding: 0.25rem;
+            border-radius: 0.375rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .ui-notification-close:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .ui-notification-close svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        /* Dialog potwierdzenia */
+        .ui-dialog-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10001;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .ui-dialog-overlay.show {
+            opacity: 1;
+        }
+
+        .ui-dialog {
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+            max-width: 450px;
+            width: 90%;
+            overflow: hidden;
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }
+
+        .ui-dialog-overlay.show .ui-dialog {
+            transform: scale(1);
+        }
+
+        body.dark-mode .ui-dialog {
+            background: #1e293b;
+            color: #e2e8f0;
+        }
+
+        .ui-dialog-content {
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            text-align: center;
+        }
+
+        .ui-dialog-icon {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .ui-dialog-icon svg {
+            width: 32px;
+            height: 32px;
+        }
+
+        .ui-dialog-message {
+            font-size: 1.0625rem;
+            font-weight: 500;
+            color: #1e293b;
+            line-height: 1.6;
+        }
+
+        body.dark-mode .ui-dialog-message {
+            color: #e2e8f0;
+        }
+
+        .ui-dialog-actions {
+            display: flex;
+            gap: 0.75rem;
+            padding: 1rem 2rem;
+            background: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+            justify-content: flex-end;
+        }
+
+        body.dark-mode .ui-dialog-actions {
+            background: #0f172a;
+            border-top-color: #334155;
+        }
+
+        .ui-dialog-button {
+            padding: 0.625rem 1.5rem;
+            border-radius: 0.5rem;
+            font-size: 0.9375rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+
+        .ui-dialog-button-primary {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+        }
+
+        .ui-dialog-button-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+
+        .ui-dialog-button-secondary {
+            background: #e2e8f0;
+            color: #475569;
+        }
+
+        .ui-dialog-button-secondary:hover {
+            background: #cbd5e1;
+        }
+
+        body.dark-mode .ui-dialog-button-secondary {
+            background: #334155;
+            color: #cbd5e1;
+        }
+
+        body.dark-mode .ui-dialog-button-secondary:hover {
+            background: #475569;
+        }
+
+        @media (max-width: 768px) {
+            .ui-notification {
+                top: 80px;
+                right: 10px;
+                left: 10px;
+                min-width: auto;
+                max-width: none;
+            }
+        }
+    </style>
+    
+    {% if user.is_authenticated %}
+    <script>
+        // Automatyczne wylogowanie po bezczynności
+        (function() {
+            let logoutTimer = null;
+            let warningTimer = null;
+            let autoLogoutEnabled = true;
+            let autoLogoutTimeoutMinutes = 5;
+            let warningShown = false;
+            
+            // Funkcja do resetowania timera
+            function resetLogoutTimer() {
+                // Wyczyść istniejące timery
+                if (logoutTimer) {
+                    clearTimeout(logoutTimer);
+                    logoutTimer = null;
+                }
+                if (warningTimer) {
+                    clearTimeout(warningTimer);
+                    warningTimer = null;
+                }
+                warningShown = false;
+                
+                // Jeśli auto-logout jest wyłączone, nie rób nic
+                if (!autoLogoutEnabled) {
+                    return;
+                }
+                
+                // Ustaw timer ostrzeżenia (30 sekund przed wylogowaniem)
+                const warningDelay = (autoLogoutTimeoutMinutes * 60 - 30) * 1000;
+                if (warningDelay > 0) {
+                    warningTimer = setTimeout(() => {
+                        if (!warningShown) {
+                            warningShown = true;
+                            const remainingSeconds = 30;
+                            showWarningNotification(
+                                `Zostaniesz automatycznie wylogowany za ${remainingSeconds} sekund z powodu bezczynności.`,
+                                30000
+                            );
+                        }
+                    }, warningDelay);
+                }
+                
+                // Ustaw timer wylogowania
+                const logoutDelay = autoLogoutTimeoutMinutes * 60 * 1000;
+                logoutTimer = setTimeout(() => {
+                    showInfoNotification('Zostałeś automatycznie wylogowany z powodu bezczynności.', 3000);
+                    // Wyloguj użytkownika – token CSRF z ciasteczka (aktualny), w razie braku przekierowanie GET
+                    setTimeout(() => {
+                        const token = typeof getCSRFToken !== 'undefined' ? getCSRFToken() : getCookie('csrftoken');
+                        if (token) {
+                            const form = document.createElement('form');
+                            form.method = 'POST';
+                            form.action = '{% url "qrp_app:logout" %}';
+                            const input = document.createElement('input');
+                            input.type = 'hidden';
+                            input.name = 'csrfmiddlewaretoken';
+                            input.value = token;
+                            form.appendChild(input);
+                            document.body.appendChild(form);
+                            form.submit();
+                        } else {
+                            window.location.href = '{% url "qrp_app:logout" %}';
+                        }
+                    }, 1000);
+                }, logoutDelay);
+            }
+            
+            // Funkcja do pobrania ustawień z API
+            function loadAutoLogoutSettings() {
+                fetch('{% url "qrp_app:api_auto_logout_settings" %}')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            autoLogoutEnabled = data.auto_logout_enabled;
+                            autoLogoutTimeoutMinutes = data.auto_logout_timeout_minutes;
+                            
+                            // Jeśli auto-logout jest włączone, uruchom timer
+                            if (autoLogoutEnabled) {
+                                resetLogoutTimer();
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Błąd podczas pobierania ustawień auto-logout:', error);
+                        // W przypadku błędu, użyj domyślnych wartości i uruchom timer
+                        resetLogoutTimer();
+                    });
+            }
+            
+            // Zdarzenia, które resetują timer (aktywność użytkownika)
+            const activityEvents = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
+            
+            activityEvents.forEach(event => {
+                document.addEventListener(event, resetLogoutTimer, true);
+            });
+            
+            // Załaduj ustawienia i uruchom timer po załadowaniu strony
+            document.addEventListener('DOMContentLoaded', function() {
+                loadAutoLogoutSettings();
+            });
+            
+            // Resetuj timer również przy focusie okna
+            window.addEventListener('focus', resetLogoutTimer);
+        })();
+    </script>
+    {% endif %}
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

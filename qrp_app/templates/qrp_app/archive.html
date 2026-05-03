@@ -1,0 +1,1815 @@
+{% extends 'qrp_app/base.html' %}
+
+
+{% block extra_css %}
+<style>
+    .page-header {
+        background: white;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .page-header h1 {
+        font-size: 2rem;
+        font-weight: 900;
+        color: #1e293b;
+    }
+
+    .stats {
+        display: flex;
+        gap: 2rem;
+    }
+
+    .stat-item {
+        text-align: center;
+    }
+
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: 900;
+        color: #4f46e5;
+    }
+
+    .stat-label {
+        font-size: 0.75rem;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-top: 0.25rem;
+    }
+
+    .filters-panel {
+        background: white;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    }
+
+    .filters-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .filters-header h2 {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #1e293b;
+    }
+
+    .filter-toggle {
+        background: #f1f5f9;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #334155;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .filter-toggle:hover {
+        background: #e2e8f0;
+    }
+
+    .filters-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .filter-group label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .filter-group input,
+    .filter-group select {
+        padding: 0.625rem 0.875rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+        transition: all 0.3s;
+    }
+
+    .filter-group input:focus,
+    .filter-group select:focus {
+        outline: none;
+        border-color: #4f46e5;
+    }
+
+    .search-suggestions {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 0.5rem;
+        margin-top: 0.25rem;
+        max-height: 200px;
+        overflow-y: auto;
+        z-index: 1000;
+        display: none;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .search-suggestions.show {
+        display: block;
+    }
+
+    .suggestion-item {
+        padding: 0.625rem 0.875rem;
+        cursor: pointer;
+        font-size: 0.875rem;
+        color: #334155;
+        border-bottom: 1px solid #f1f5f9;
+        transition: background 0.2s;
+    }
+
+    .suggestion-item:last-child {
+        border-bottom: none;
+    }
+
+    .suggestion-item:hover,
+    .suggestion-item.highlighted {
+        background: #f8fafc;
+        color: #4f46e5;
+    }
+
+    .suggestion-item strong {
+        font-weight: 700;
+        color: #4f46e5;
+    }
+
+    .filter-actions {
+        display: flex;
+        gap: 0.75rem;
+        justify-content: flex-end;
+    }
+
+    .btn {
+        padding: 0.625rem 1.25rem;
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        border: none;
+    }
+
+    .btn-primary {
+        background: linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%);
+        color: white;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+    }
+
+    .btn-secondary {
+        background: #f1f5f9;
+        color: #334155;
+    }
+
+    .btn-secondary:hover {
+        background: #e2e8f0;
+    }
+
+    .btn-export {
+        background: #10b981;
+        color: white;
+    }
+
+    .btn-export:hover {
+        background: #059669;
+        transform: translateY(-2px);
+    }
+
+    .results-panel {
+        background: white;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    }
+
+    .results-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .results-info {
+        font-size: 0.875rem;
+        color: #64748b;
+    }
+
+    .results-info strong {
+        color: #1e293b;
+        font-weight: 700;
+    }
+
+    .table-container {
+        overflow-x: auto;
+        border-radius: 0.75rem;
+        border: 1px solid #e2e8f0;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    thead {
+        background: #f8fafc;
+    }
+
+    th {
+        padding: 1rem;
+        text-align: left;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        border-bottom: 2px solid #e2e8f0;
+    }
+
+    tbody tr {
+        border-bottom: 1px solid #f1f5f9;
+        transition: all 0.2s;
+    }
+
+    tbody tr:hover {
+        background: #f8fafc;
+    }
+
+    td {
+        padding: 1rem;
+        font-size: 0.875rem;
+        color: #334155;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 0.375rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .badge-measurement {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+
+    .badge-defect {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .badge-standard {
+        background: #f0fdf4;
+        color: #166534;
+    }
+
+    .badge-recheck {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .action-btn {
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        padding: 0.375rem;
+        border-radius: 0.375rem;
+        transition: all 0.2s;
+        color: #64748b;
+    }
+
+    .action-btn:hover {
+        background: #f1f5f9;
+        color: #334155;
+    }
+
+    .action-btn svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 1.5rem;
+    }
+
+    .page-btn {
+        padding: 0.5rem 0.875rem;
+        border: 1px solid #e2e8f0;
+        background: white;
+        border-radius: 0.375rem;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #334155;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .page-btn:hover {
+        border-color: #4f46e5;
+        color: #4f46e5;
+    }
+
+    .page-btn.active {
+        background: linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%);
+        color: white;
+        border-color: transparent;
+    }
+
+    .page-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: #94a3b8;
+    }
+
+    .empty-state svg {
+        width: 64px;
+        height: 64px;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+
+    .empty-state h3 {
+        font-size: 1.125rem;
+        color: #64748b;
+        margin-bottom: 0.5rem;
+    }
+
+    .empty-state p {
+        font-size: 0.875rem;
+    }
+
+    @media (max-width: 1024px) {
+        .filters-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .page-header {
+            flex-direction: column;
+            gap: 1rem;
+            align-items: flex-start;
+        }
+
+        .table-container {
+            font-size: 0.75rem;
+        }
+
+        th, td {
+            padding: 0.75rem 0.5rem;
+        }
+    }
+
+    @media (max-height: 900px) and (orientation: portrait) {
+        .container {
+            padding: 1rem;
+        }
+
+        .page-header {
+            padding: 1rem;
+        }
+
+        .filters-panel,
+        .results-panel {
+            padding: 1rem;
+        }
+
+        .filters-grid {
+            gap: 0.75rem;
+        }
+
+        .filter-group {
+            margin-bottom: 0.5rem;
+        }
+    }
+
+    @media (max-height: 700px) {
+        .container {
+            padding: 0.75rem;
+        }
+
+        .filters-panel,
+        .results-panel {
+            padding: 0.75rem;
+        }
+    }
+
+    /* Dark mode styles dla archive.html */
+    body.dark-mode .stat-value {
+        color: #06b6d4;
+    }
+
+    body.dark-mode .stat-label {
+        color: #94a3b8;
+    }
+
+    body.dark-mode .filter-toggle {
+        background: #334155;
+        color: #e2e8f0;
+    }
+
+    body.dark-mode .filter-toggle:hover {
+        background: #475569;
+    }
+
+    body.dark-mode .search-suggestions {
+        background: #1e293b;
+        border-color: #334155;
+    }
+
+    body.dark-mode .suggestion-item {
+        color: #e2e8f0;
+        border-bottom-color: #334155;
+    }
+
+    body.dark-mode .suggestion-item:hover,
+    body.dark-mode .suggestion-item.highlighted {
+        background: #334155;
+        color: #06b6d4;
+    }
+
+    body.dark-mode .suggestion-item strong {
+        color: #06b6d4;
+    }
+
+    body.dark-mode .btn-secondary {
+        background: #334155;
+        color: #e2e8f0;
+    }
+
+    body.dark-mode .btn-secondary:hover {
+        background: #475569;
+    }
+
+    body.dark-mode .results-info {
+        color: #94a3b8;
+    }
+
+    body.dark-mode .results-info strong {
+        color: #e2e8f0;
+    }
+
+    body.dark-mode .action-btn {
+        color: #94a3b8;
+    }
+
+    body.dark-mode .action-btn:hover {
+        background: #334155;
+        color: #e2e8f0;
+    }
+
+    body.dark-mode .page-btn {
+        background: #1e293b;
+        border-color: #334155;
+        color: #e2e8f0;
+    }
+
+    body.dark-mode .page-btn:hover {
+        border-color: #06b6d4;
+        color: #06b6d4;
+    }
+
+    body.dark-mode .page-btn.active {
+        background: linear-gradient(90deg, #06b6d4 0%, #2563eb 100%);
+        color: white;
+        border-color: transparent;
+    }
+
+    body.dark-mode .empty-state {
+        color: #94a3b8;
+    }
+
+    body.dark-mode .empty-state h3 {
+        color: #cbd5e1;
+    }
+
+    .image-modal {
+        display: none;
+        position: fixed;
+        z-index: 10000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.9);
+        cursor: zoom-out;
+    }
+
+    .image-modal.active {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .image-modal-content {
+        max-width: 90%;
+        max-height: 90%;
+        object-fit: contain;
+        transition: transform 0.3s;
+        cursor: zoom-in;
+    }
+
+    .image-modal-content.zoomed {
+        cursor: grab;
+    }
+
+    .image-modal-content.zoomed:active {
+        cursor: grabbing;
+    }
+
+    .image-modal-close {
+        position: absolute;
+        top: 20px;
+        right: 40px;
+        color: #f1f1f1;
+        font-size: 40px;
+        font-weight: bold;
+        cursor: pointer;
+        background: rgba(0, 0, 0, 0.5);
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.3s;
+    }
+
+    .image-modal-close:hover {
+        background: rgba(0, 0, 0, 0.8);
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+    }
+
+    /* Modal poczekalni */
+    .pending-queue-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: 10001;
+        align-items: center;
+        justify-content: center;
+        overflow-y: auto;
+    }
+
+    .pending-queue-modal.active {
+        display: flex;
+    }
+
+    .pending-queue-content {
+        background: white;
+        border-radius: 1rem;
+        max-width: 900px;
+        width: 90%;
+        max-height: 90vh;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+        margin: auto;
+        position: relative;
+    }
+
+    .pending-queue-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid #e2e8f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-shrink: 0;
+    }
+
+    .pending-queue-header h2 {
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: 900;
+        color: #1e293b;
+    }
+
+    .pending-queue-close {
+        background: transparent;
+        border: none;
+        font-size: 2rem;
+        cursor: pointer;
+        color: #64748b;
+        padding: 0.5rem;
+        border-radius: 0.375rem;
+        transition: all 0.2s;
+        line-height: 1;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .pending-queue-close:hover {
+        background: #f1f5f9;
+        color: #1e293b;
+    }
+
+    .pending-queue-body {
+        padding: 0;
+        overflow-y: auto;
+        flex: 1;
+        min-height: 0;
+    }
+
+    .pending-queue-footer {
+        padding: 1rem 1.5rem;
+        border-top: 1px solid #e2e8f0;
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.75rem;
+        flex-shrink: 0;
+    }
+
+    .pending-queue-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .pending-queue-table th,
+    .pending-queue-table td {
+        padding: 0.75rem;
+        text-align: left;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .pending-queue-table thead {
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+    }
+
+    .pending-queue-table thead::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: #f8fafc;
+        z-index: -1;
+    }
+
+    .pending-queue-table th {
+        background: #f8fafc;
+        font-weight: 600;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        color: #64748b;
+        letter-spacing: 0.05em;
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        border-bottom: 2px solid #e2e8f0;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+    }
+
+    .pending-queue-table tbody {
+        position: relative;
+        z-index: 0;
+    }
+
+    .pending-queue-table tbody tr {
+        background: white;
+        position: relative;
+        z-index: 0;
+    }
+
+    .pending-queue-body {
+        padding: 0;
+    }
+
+    #pendingQueueTableContainer {
+        padding: 1.5rem;
+    }
+
+    .pending-queue-table tbody tr:hover {
+        background: #f8fafc;
+    }
+
+    @media (max-width: 768px) {
+        .pending-queue-content {
+            width: 95%;
+            max-height: 95vh;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>Archiwum Zapisów</h1>
+        <div style="display: flex; align-items: center; gap: 2rem;">
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-value">{{ total_count }}</div>
+                    <div class="stat-label">Łącznie</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">{{ pomiary_count }}</div>
+                    <div class="stat-label">Pomiary</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">{{ wady_count }}</div>
+                    <div class="stat-label">Wady</div>
+                </div>
+            </div>
+            {% if show_sync_status %}
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <div id="syncStatusIndicator" class="sync-status-indicator" title="Status synchronizacji">
+                    <div class="sync-status-dot" id="syncStatusDot"></div>
+                </div>
+                <button id="pendingQueueBtn" class="btn btn-secondary" onclick="openPendingQueueModal()">
+                    📋 Poczekalnia
+                </button>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="filters-panel">
+        <div class="filters-header">
+            <h2>🔍 Filtry wyszukiwania</h2>
+            <button class="filter-toggle" onclick="toggleFilters()">
+                <span id="filterToggleText">Rozwiń</span> ▼
+            </button>
+        </div>
+
+        <div id="filtersContent" style="display: none;">
+            <div class="filters-grid">
+                <div class="filter-group">
+                    <label>Typ zapisu</label>
+                    <select id="filterType">
+                        <option value="">Wszystkie</option>
+                        <option value="measurement">Pomiary</option>
+                        <option value="defect">Wady</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>Linia</label>
+                    <select id="filterLine">
+                        <option value="">Wszystkie</option>
+                        {% for linia in linie %}
+                        <option value="{{ linia.id }}">{{ linia.rejestrator.nazwa }} - {{ linia.nazwa }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>Typ kontroli</label>
+                    <select id="filterControl">
+                        <option value="">Wszystkie</option>
+                        {% for typ in typy_kontroli %}
+                        <option value="{{ typ.id }}">{{ typ.nazwa }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>Data od</label>
+                    <input type="date" id="filterDateFrom">
+                </div>
+
+                <div class="filter-group">
+                    <label>Data do</label>
+                    <input type="date" id="filterDateTo">
+                </div>
+
+                <div class="filter-group">
+                    <label>Numer zlecenia</label>
+                    <input type="text" id="filterOrder" placeholder="np. 000001143274">
+                </div>
+
+                <div class="filter-group" style="position: relative;">
+                    <label>Wyszukiwarka frazowa</label>
+                    <input type="text" id="filterSearch" placeholder="Zacznij pisać..." autocomplete="off">
+                    <div id="searchSuggestions" class="search-suggestions"></div>
+                </div>
+            </div>
+
+            <div class="filter-actions">
+                <button class="btn btn-secondary" onclick="resetFilters()">Wyczyść filtry</button>
+                <button class="btn btn-primary" onclick="applyFilters()">Zastosuj filtry</button>
+                <button class="btn btn-export" onclick="exportData()">📥 Eksport CSV</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="results-panel">
+        <div class="results-header">
+            <div class="results-info">
+                Znaleziono <strong id="resultsCount">{{ total_count }}</strong> wyników
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Typ</th>
+                        <th>Data</th>
+                        <th>Linia</th>
+                        <th>Zlecenie</th>
+                        <th>Typ kontroli</th>
+                        <th>Opis/Test</th>
+                        <th>Operator</th>
+                        <th>Komentarze</th>
+                        {% if show_sync_column %}<th>Wysłano</th>{% endif %}
+                        <th>Akcje</th>
+                    </tr>
+                </thead>
+                <tbody id="resultsTable">
+                    {% if total_count == 0 %}
+                    <tr>
+                        <td colspan="{% if show_sync_column %}11{% else %}10{% endif %}">
+                            <div class="empty-state">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                <h3>Brak zapisów</h3>
+                                <p>Archiwum jest puste. Zarejestruj pierwszy pomiar lub wadę.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    {% for record_type, record, kj_number in all_records %}
+                    {% if record_type == 'measurement' %}
+                    <tr data-type="measurement" data-line="{{ record.linia_produkcyjna.id }}" data-control="{{ record.typ_kontroli.id|default:'' }}" data-order="{{ record.numer_zlecenia|default:'' }}" data-kj="{{ kj_number }}">
+                        <td>{{ record.id }}</td>
+                        <td><span class="badge badge-measurement">Pomiar</span></td>
+                        <td>{{ record.data_utworzenia|date:"Y-m-d H:i" }}</td>
+                        <td>{{ record.linia_produkcyjna.rejestrator.nazwa }} - {{ record.linia_produkcyjna.nazwa }}</td>
+                        <td>{{ record.numer_zlecenia|default:"-" }}</td>
+                        <td><span class="badge badge-standard">{{ record.typ_kontroli|default:"-" }}</span></td>
+                        <td>{{ record.get_rodzaj_testu_display }}</td>
+                        <td>{{ record.uzytkownik.username|default:"-" }}{% if kj_number %} ({{ kj_number }}){% endif %}</td>
+                        <td>{{ record.komentarz|default:"-"|truncatewords:15 }}</td>
+                        {% if show_sync_column %}
+                        <td>
+                            {% if record.is_synced %}
+                                <span style="color: #10b981; font-weight: 600;">✓ Tak</span>
+                                {% if record.synced_at %}
+                                    <br><small style="color: #64748b;">{{ record.synced_at|date:"Y-m-d H:i" }}</small>
+                                {% endif %}
+                            {% else %}
+                                <span style="color: #ef4444; font-weight: 600;">✗ Nie</span>
+                            {% endif %}
+                        </td>
+                        {% endif %}
+                        <td>
+                            <div class="action-buttons">
+                                {% if record.zdjecie %}
+                                <button class="action-btn" title="Podgląd zdjęcia" onclick="showImageModal('{{ record.zdjecie.url }}')">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                    </svg>
+                                </button>
+                                {% endif %}
+                                <button class="action-btn" title="Eksport do PDF" onclick="exportPDF('measurement', {{ record.id }})">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr data-type="defect" data-line="{{ record.linia_produkcyjna.id }}" data-control="{{ record.typ_kontroli.id|default:'' }}" data-order="{{ record.numer_zlecenia|default:'' }}" data-kj="{{ kj_number }}">
+                        <td>{{ record.id }}</td>
+                        <td><span class="badge badge-defect">Wada</span></td>
+                        <td>{{ record.data_utworzenia|date:"Y-m-d H:i" }}</td>
+                        <td>{{ record.linia_produkcyjna.rejestrator.nazwa }} - {{ record.linia_produkcyjna.nazwa }}</td>
+                        <td>{{ record.numer_zlecenia|default:"-" }}</td>
+                        <td><span class="badge badge-standard">{{ record.typ_kontroli|default:"-" }}</span></td>
+                        <td>{{ record.opis_wady|truncatewords:10 }}</td>
+                        <td>{{ record.uzytkownik.username|default:"-" }}{% if kj_number %} ({{ kj_number }}){% endif %}</td>
+                        <td>{{ record.komentarz|default:"-"|truncatewords:15 }}</td>
+                        {% if show_sync_column %}
+                        <td>
+                            {% if record.is_synced %}
+                                <span style="color: #10b981; font-weight: 600;">✓ Tak</span>
+                                {% if record.synced_at %}
+                                    <br><small style="color: #64748b;">{{ record.synced_at|date:"Y-m-d H:i" }}</small>
+                                {% endif %}
+                            {% else %}
+                                <span style="color: #ef4444; font-weight: 600;">✗ Nie</span>
+                            {% endif %}
+                        </td>
+                        {% endif %}
+                        <td>
+                            <div class="action-buttons">
+                                {% if record.zdjecie %}
+                                <button class="action-btn" title="Podgląd zdjęcia" onclick="showImageModal('{{ record.zdjecie.url }}')">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                    </svg>
+                                </button>
+                                {% endif %}
+                                <button class="action-btn" title="Eksport do PDF" onclick="exportPDF('defect', {{ record.id }})">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endif %}
+                    {% endfor %}
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="pagination">
+            <button class="page-btn" disabled>‹ Poprzednia</button>
+            <button class="page-btn active">1</button>
+            <button class="page-btn" disabled>Następna ›</button>
+        </div>
+    </div>
+</div>
+
+<div id="imageModal" class="image-modal">
+    <span class="image-modal-close">&times;</span>
+    <img id="modalImage" class="image-modal-content" src="" alt="Podgląd zdjęcia">
+</div>
+
+<!-- Modal poczekalni -->
+<div id="pendingQueueModal" class="pending-queue-modal">
+    <div class="pending-queue-content">
+        <div class="pending-queue-header">
+            <h2>📋 Poczekalnia synchronizacji</h2>
+            <button class="pending-queue-close" onclick="closePendingQueueModal()">&times;</button>
+        </div>
+        <div class="pending-queue-body">
+            <div id="pendingQueueTableContainer">
+                <p style="text-align: center; color: #64748b;">Ładowanie...</p>
+            </div>
+        </div>
+        <div class="pending-queue-footer">
+            <button class="btn btn-primary" id="syncNowBtn" onclick="syncPendingRecords()">Wyślij teraz</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function toggleFilters() {
+        const content = document.getElementById('filtersContent');
+        const toggleText = document.getElementById('filterToggleText');
+        
+        if (content.style.display === 'none') {
+            content.style.display = 'block';
+            toggleText.textContent = 'Zwiń';
+        } else {
+            content.style.display = 'none';
+            toggleText.textContent = 'Rozwiń';
+        }
+    }
+
+    function resetFilters() {
+        document.getElementById('filterType').value = '';
+        document.getElementById('filterLine').value = '';
+        document.getElementById('filterControl').value = '';
+        document.getElementById('filterDateFrom').value = '';
+        document.getElementById('filterDateTo').value = '';
+        document.getElementById('filterOrder').value = '';
+        document.getElementById('filterSearch').value = '';
+        applyFilters();
+    }
+
+    let currentPage = 1;
+    const itemsPerPage = 3;
+    let allDescriptions = [];
+
+    function removeDiacritics(text) {
+        const diacriticsMap = {
+            'ą': 'a', 'ć': 'c', 'ę': 'e', 'ł': 'l', 'ń': 'n', 'ó': 'o', 'ś': 's', 'ź': 'z', 'ż': 'z',
+            'Ą': 'A', 'Ć': 'C', 'Ę': 'E', 'Ł': 'L', 'Ń': 'N', 'Ó': 'O', 'Ś': 'S', 'Ź': 'Z', 'Ż': 'Z'
+        };
+        return text.replace(/[ąćęłńóśźżĄĆĘŁŃÓŚŹŻ]/g, function(char) {
+            return diacriticsMap[char] || char;
+        });
+    }
+
+    function normalizeText(text) {
+        return removeDiacritics(text.toLowerCase().replace(/\s+/g, ''));
+    }
+
+    function applyFilters() {
+        const filterType = document.getElementById('filterType').value;
+        const filterLine = document.getElementById('filterLine').value;
+        const filterControl = document.getElementById('filterControl').value;
+        const filterDateFrom = document.getElementById('filterDateFrom').value;
+        const filterDateTo = document.getElementById('filterDateTo').value;
+        const filterOrder = document.getElementById('filterOrder').value.toLowerCase();
+        const filterSearchInput = document.getElementById('filterSearch').value;
+        const filterSearch = normalizeText(filterSearchInput);
+        
+        const rows = document.querySelectorAll('#resultsTable tr[data-type]');
+        let visibleRows = [];
+        
+        rows.forEach(row => {
+            let visible = true;
+            
+            if (filterType && row.dataset.type !== filterType) {
+                visible = false;
+            }
+            
+            if (filterLine && row.dataset.line !== filterLine) {
+                visible = false;
+            }
+            
+            if (filterControl && row.dataset.control !== filterControl) {
+                visible = false;
+            }
+            
+            if (filterOrder && !row.dataset.order.toLowerCase().includes(filterOrder)) {
+                visible = false;
+            }
+            
+            if (filterSearch) {
+                const text = normalizeText(row.textContent);
+                // Dodatkowo sprawdź numer KJ z data-attribute
+                const kjNumber = row.dataset.kj ? normalizeText(row.dataset.kj) : '';
+                const searchText = text + ' ' + kjNumber;
+                if (!searchText.includes(filterSearch)) {
+                    visible = false;
+                }
+            }
+            
+            if (filterDateFrom || filterDateTo) {
+                const dateText = row.cells[2].textContent.trim();
+                const rowDate = new Date(dateText);
+                
+                if (filterDateFrom) {
+                    const fromDate = new Date(filterDateFrom);
+                    if (rowDate < fromDate) {
+                        visible = false;
+                    }
+                }
+                
+                if (filterDateTo) {
+                    const toDate = new Date(filterDateTo);
+                    toDate.setHours(23, 59, 59, 999);
+                    if (rowDate > toDate) {
+                        visible = false;
+                    }
+                }
+            }
+            
+            if (visible) {
+                visibleRows.push(row);
+            }
+            row.style.display = 'none';
+        });
+        
+        document.getElementById('resultsCount').textContent = visibleRows.length;
+        currentPage = 1;
+        displayPage(visibleRows);
+        updatePagination(visibleRows.length);
+    }
+
+    function displayPage(visibleRows) {
+        const start = (currentPage - 1) * itemsPerPage;
+        const end = start + itemsPerPage;
+        
+        visibleRows.forEach((row, index) => {
+            if (index >= start && index < end) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+
+    function updatePagination(totalItems) {
+        const totalPages = Math.ceil(totalItems / itemsPerPage);
+        const paginationContainer = document.querySelector('.pagination');
+        
+        if (totalPages <= 1) {
+            paginationContainer.innerHTML = '';
+            return;
+        }
+        
+        let paginationHTML = '';
+        
+        // Przycisk "Pierwsza"
+        if (currentPage > 1) {
+            paginationHTML += `<button class="page-btn" onclick="goToPage(1)">Pierwsza</button>`;
+        } else {
+            paginationHTML += `<button class="page-btn" disabled>Pierwsza</button>`;
+        }
+        
+        // Przycisk "Poprzednia"
+        if (currentPage > 1) {
+            paginationHTML += `<button class="page-btn" onclick="goToPage(${currentPage - 1})">Poprzednia</button>`;
+        } else {
+            paginationHTML += `<button class="page-btn" disabled>Poprzednia</button>`;
+        }
+        
+        // Numery stron - maksymalnie 5 stron w środku
+        let startPage = Math.max(1, currentPage - 2);
+        let endPage = Math.min(totalPages, startPage + 4);
+        
+        // Jeśli jesteśmy blisko końca, przesuń zakres w lewo
+        if (endPage - startPage < 4) {
+            startPage = Math.max(1, endPage - 4);
+        }
+        
+        for (let i = startPage; i <= endPage; i++) {
+            if (i === currentPage) {
+                paginationHTML += `<button class="page-btn active">${i}</button>`;
+            } else {
+                paginationHTML += `<button class="page-btn" onclick="goToPage(${i})">${i}</button>`;
+            }
+        }
+        
+        // Przycisk "Następna"
+        if (currentPage < totalPages) {
+            paginationHTML += `<button class="page-btn" onclick="goToPage(${currentPage + 1})">Następna</button>`;
+        } else {
+            paginationHTML += `<button class="page-btn" disabled>Następna</button>`;
+        }
+        
+        // Przycisk "Ostatnia"
+        if (currentPage < totalPages) {
+            paginationHTML += `<button class="page-btn" onclick="goToPage(${totalPages})">Ostatnia</button>`;
+        } else {
+            paginationHTML += `<button class="page-btn" disabled>Ostatnia</button>`;
+        }
+        
+        paginationContainer.innerHTML = paginationHTML;
+    }
+
+    function goToPage(page) {
+        const filterType = document.getElementById('filterType').value;
+        const filterLine = document.getElementById('filterLine').value;
+        const filterControl = document.getElementById('filterControl').value;
+        const filterDateFrom = document.getElementById('filterDateFrom').value;
+        const filterDateTo = document.getElementById('filterDateTo').value;
+        const filterOrder = document.getElementById('filterOrder').value.toLowerCase();
+        const filterSearchInput = document.getElementById('filterSearch').value;
+        const filterSearch = normalizeText(filterSearchInput);
+        
+        const rows = document.querySelectorAll('#resultsTable tr[data-type]');
+        let visibleRows = [];
+        
+        rows.forEach(row => {
+            let visible = true;
+            
+            if (filterType && row.dataset.type !== filterType) {
+                visible = false;
+            }
+            
+            if (filterLine && row.dataset.line !== filterLine) {
+                visible = false;
+            }
+            
+            if (filterControl && row.dataset.control !== filterControl) {
+                visible = false;
+            }
+            
+            if (filterOrder && !row.dataset.order.toLowerCase().includes(filterOrder)) {
+                visible = false;
+            }
+            
+            if (filterSearch) {
+                const text = normalizeText(row.textContent);
+                // Dodatkowo sprawdź numer KJ z data-attribute
+                const kjNumber = row.dataset.kj ? normalizeText(row.dataset.kj) : '';
+                const searchText = text + ' ' + kjNumber;
+                if (!searchText.includes(filterSearch)) {
+                    visible = false;
+                }
+            }
+            
+            if (filterDateFrom || filterDateTo) {
+                const dateText = row.cells[2].textContent.trim();
+                const rowDate = new Date(dateText);
+                
+                if (filterDateFrom) {
+                    const fromDate = new Date(filterDateFrom);
+                    if (rowDate < fromDate) {
+                        visible = false;
+                    }
+                }
+                
+                if (filterDateTo) {
+                    const toDate = new Date(filterDateTo);
+                    toDate.setHours(23, 59, 59, 999);
+                    if (rowDate > toDate) {
+                        visible = false;
+                    }
+                }
+            }
+            
+            if (visible) {
+                visibleRows.push(row);
+            }
+        });
+        
+        currentPage = page;
+        displayPage(visibleRows);
+        updatePagination(visibleRows.length);
+    }
+
+    function hasActiveFilters() {
+        const filterType = document.getElementById('filterType').value;
+        const filterLine = document.getElementById('filterLine').value;
+        const filterControl = document.getElementById('filterControl').value;
+        const filterDateFrom = document.getElementById('filterDateFrom').value;
+        const filterDateTo = document.getElementById('filterDateTo').value;
+        const filterOrder = document.getElementById('filterOrder').value.trim();
+        const filterSearch = document.getElementById('filterSearch').value.trim();
+        
+        return filterType || filterLine || filterControl || filterDateFrom || filterDateTo || filterOrder || filterSearch;
+    }
+
+    function getAllFilteredRowIds() {
+        const filterType = document.getElementById('filterType').value;
+        const filterLine = document.getElementById('filterLine').value;
+        const filterControl = document.getElementById('filterControl').value;
+        const filterDateFrom = document.getElementById('filterDateFrom').value;
+        const filterDateTo = document.getElementById('filterDateTo').value;
+        const filterOrder = document.getElementById('filterOrder').value.toLowerCase();
+        const filterSearchInput = document.getElementById('filterSearch').value;
+        const filterSearch = normalizeText(filterSearchInput);
+        
+        const rows = document.querySelectorAll('#resultsTable tr[data-type]');
+        const visibleIds = [];
+        
+        rows.forEach(row => {
+            let visible = true;
+            
+            if (filterType && row.dataset.type !== filterType) {
+                visible = false;
+            }
+            
+            if (filterLine && row.dataset.line !== filterLine) {
+                visible = false;
+            }
+            
+            if (filterControl && row.dataset.control !== filterControl) {
+                visible = false;
+            }
+            
+            if (filterOrder && !row.dataset.order.toLowerCase().includes(filterOrder)) {
+                visible = false;
+            }
+            
+            if (filterSearch) {
+                const text = normalizeText(row.textContent);
+                // Dodatkowo sprawdź numer KJ z data-attribute
+                const kjNumber = row.dataset.kj ? normalizeText(row.dataset.kj) : '';
+                const searchText = text + ' ' + kjNumber;
+                if (!searchText.includes(filterSearch)) {
+                    visible = false;
+                }
+            }
+            
+            if (filterDateFrom || filterDateTo) {
+                const dateText = row.cells[2].textContent.trim();
+                const rowDate = new Date(dateText);
+                
+                if (filterDateFrom) {
+                    const fromDate = new Date(filterDateFrom);
+                    if (rowDate < fromDate) {
+                        visible = false;
+                    }
+                }
+                
+                if (filterDateTo) {
+                    const toDate = new Date(filterDateTo);
+                    toDate.setHours(23, 59, 59, 999);
+                    if (rowDate > toDate) {
+                        visible = false;
+                    }
+                }
+            }
+            
+            if (visible) {
+                const rowType = row.dataset.type;
+                const rowId = row.cells[0].textContent.trim();
+                visibleIds.push(`${rowType}_${rowId}`);
+            }
+        });
+        
+        return visibleIds;
+    }
+
+    function exportData() {
+        const hasFilters = hasActiveFilters();
+        const visibleCount = parseInt(document.getElementById('resultsCount').textContent) || 0;
+        
+        if (hasFilters) {
+            const confirmMessage = `Czy chcesz wyeksportować tylko przefiltrowane wyniki?<br><br>Znaleziono: <strong>${visibleCount}</strong> wyników`;
+            
+            showConfirmDialog(confirmMessage, () => {
+                const visibleIds = getAllFilteredRowIds();
+                const params = new URLSearchParams();
+                visibleIds.forEach(id => {
+                    params.append('ids', id);
+                });
+                window.location.href = '{% url "qrp_app:export_csv" %}?' + params.toString();
+            });
+        } else {
+            const confirmMessage = `Czy chcesz wyeksportować całą bazę danych?<br><br>To może być duży plik.`;
+            
+            showConfirmDialog(confirmMessage, () => {
+                window.location.href = '{% url "qrp_app:export_csv" %}';
+            });
+        }
+    }
+    
+    function exportPDF(recordType, recordId) {
+        window.location.href = `/export/pdf/${recordType}/${recordId}/`;
+    }
+
+    function showImageModal(imageUrl) {
+        const modal = document.getElementById('imageModal');
+        const img = document.getElementById('modalImage');
+        img.src = imageUrl;
+        img.classList.remove('zoomed');
+        img.style.transform = '';
+        img.dataset.tx = '0';
+        img.dataset.ty = '0';
+        modal.classList.add('active');
+    }
+
+    function closeImageModal() {
+        const modal = document.getElementById('imageModal');
+        const img = document.getElementById('modalImage');
+        modal.classList.remove('active');
+        img.classList.remove('zoomed');
+        img.style.transform = '';
+        img.dataset.tx = '0';
+        img.dataset.ty = '0';
+    }
+
+    function setImageTransform(img) {
+        const tx = Number(img.dataset.tx || 0);
+        const ty = Number(img.dataset.ty || 0);
+        const zoom = img.classList.contains('zoomed') ? 3 : 1;
+        img.style.transform = `translate(${tx}px, ${ty}px) scale(${zoom})`;
+    }
+
+    function toggleZoom() {
+        const img = document.getElementById('modalImage');
+        const nextZoomed = !img.classList.contains('zoomed');
+        img.classList.toggle('zoomed', nextZoomed);
+        img.dataset.tx = '0';
+        img.dataset.ty = '0';
+        setImageTransform(img);
+    }
+
+    (function attachModalPanZoom() {
+        const img = document.getElementById('modalImage');
+        if (!img) return;
+
+        // Zoom tylko na dwuklik
+        img.addEventListener('dblclick', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleZoom();
+        });
+
+        let dragging = false;
+        let startX = 0;
+        let startY = 0;
+        let originTx = 0;
+        let originTy = 0;
+
+        function startDrag(clientX, clientY) {
+            if (!img.classList.contains('zoomed')) return;
+            dragging = true;
+            startX = clientX;
+            startY = clientY;
+            originTx = Number(img.dataset.tx || 0);
+            originTy = Number(img.dataset.ty || 0);
+        }
+
+        function moveDrag(clientX, clientY) {
+            if (!dragging) return;
+            img.dataset.tx = String(originTx + (clientX - startX));
+            img.dataset.ty = String(originTy + (clientY - startY));
+            setImageTransform(img);
+        }
+
+        function endDrag() {
+            dragging = false;
+        }
+
+        img.addEventListener('mousedown', (e) => {
+            if (e.button !== 0) return;
+            e.preventDefault();
+            startDrag(e.clientX, e.clientY);
+        });
+        window.addEventListener('mousemove', (e) => moveDrag(e.clientX, e.clientY));
+        window.addEventListener('mouseup', endDrag);
+
+        // Touch
+        img.addEventListener('touchstart', (e) => {
+            if (!img.classList.contains('zoomed')) return;
+            const t = e.touches[0];
+            if (!t) return;
+            startDrag(t.clientX, t.clientY);
+        }, { passive: true });
+        img.addEventListener('touchmove', (e) => {
+            if (!dragging) return;
+            const t = e.touches[0];
+            if (!t) return;
+            moveDrag(t.clientX, t.clientY);
+        }, { passive: true });
+        img.addEventListener('touchend', endDrag);
+    })();
+
+    function collectDescriptions() {
+        const rows = document.querySelectorAll('#resultsTable tr[data-type]');
+        const valuesSet = new Set();
+        
+        rows.forEach(row => {
+            // Zbierz wartości ze wszystkich komórek w wierszu (pomijając kolumnę Akcje - ostatnia kolumna)
+            for (let i = 0; i < row.cells.length - 1; i++) {
+                const cell = row.cells[i];
+                if (cell) {
+                    // Pobierz czysty tekst (bez HTML z badge)
+                    const cellText = cell.textContent || cell.innerText;
+                    const text = cellText.trim();
+                    if (text && text.length > 0) {
+                        // Dodaj całą wartość oraz pojedyncze słowa (dla lepszego autouzupełniania)
+                        const words = text.split(/\s+/);
+                        words.forEach(word => {
+                            const cleanWord = word.trim().replace(/[^\wąćęłńóśźżĄĆĘŁŃÓŚŹŻ]/g, '');
+                            if (cleanWord.length > 2) {
+                                valuesSet.add(cleanWord);
+                            }
+                        });
+                        // Dodaj też pełną wartość jeśli ma sensowną długość
+                        if (text.length > 3) {
+                            valuesSet.add(text);
+                        }
+                    }
+                }
+            }
+            // Dodatkowo zbierz numer KJ z data-attribute jeśli istnieje
+            const kjNumber = row.dataset.kj;
+            if (kjNumber && kjNumber.trim().length > 0) {
+                valuesSet.add(kjNumber.trim());
+            }
+        });
+        
+        allDescriptions = Array.from(valuesSet).sort();
+    }
+
+    function showSearchSuggestions(query) {
+        const suggestionsContainer = document.getElementById('searchSuggestions');
+        
+        if (!query || query.trim().length === 0) {
+            suggestionsContainer.classList.remove('show');
+            return;
+        }
+        
+        const normalizedQuery = normalizeText(query);
+        const matchingDescriptions = allDescriptions.filter(desc => {
+            const normalizedDesc = normalizeText(desc);
+            return normalizedDesc.includes(normalizedQuery);
+        }).slice(0, 10); // Maksymalnie 10 sugestii
+        
+        if (matchingDescriptions.length === 0) {
+            suggestionsContainer.classList.remove('show');
+            return;
+        }
+        
+        // Podświetlanie dopasowanej części tekstu
+        const highlightQuery = query.trim();
+        suggestionsContainer.innerHTML = matchingDescriptions.map(desc => {
+            let highlightedDesc = desc;
+            // Podświetlanie dopasowanej części (uwzględniając różnice w pisowni)
+            const normalizedDesc = normalizeText(desc);
+            const matchIndex = normalizedDesc.indexOf(normalizedQuery);
+            if (matchIndex !== -1 && highlightQuery.length > 0) {
+                // Znajdź odpowiadający fragment w oryginalnym tekście
+                const originalMatch = desc.substring(Math.max(0, matchIndex - 5), Math.min(desc.length, matchIndex + highlightQuery.length + 5));
+                if (originalMatch) {
+                    const regex = new RegExp('(' + highlightQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
+                    highlightedDesc = desc.replace(regex, '<strong>$1</strong>');
+                }
+            }
+            return `<div class="suggestion-item">${highlightedDesc}</div>`;
+        }).join('');
+        
+        suggestionsContainer.classList.add('show');
+        
+        // Obsługa kliknięcia w sugestię
+        suggestionsContainer.querySelectorAll('.suggestion-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const cleanText = this.textContent || this.innerText;
+                document.getElementById('filterSearch').value = cleanText;
+                suggestionsContainer.classList.remove('show');
+                applyFilters();
+            });
+            
+            item.addEventListener('mouseenter', function() {
+                suggestionsContainer.querySelectorAll('.suggestion-item').forEach(i => i.classList.remove('highlighted'));
+                this.classList.add('highlighted');
+            });
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Inicjalizacja paginacji przy ładowaniu strony
+        const allRows = Array.from(document.querySelectorAll('#resultsTable tr[data-type]'));
+        document.getElementById('resultsCount').textContent = allRows.length;
+        if (allRows.length > 0) {
+            displayPage(allRows);
+            updatePagination(allRows.length);
+        }
+        
+        // Zbierz wszystkie opisy dla autouzupełniania
+        collectDescriptions();
+        
+        // Obsługa wyszukiwania z autouzupełnianiem (jak Google)
+        const searchInput = document.getElementById('filterSearch');
+        let suggestionTimeout;
+        
+        searchInput.addEventListener('input', function() {
+            clearTimeout(suggestionTimeout);
+            // Wyświetlaj sugestie natychmiast podczas wpisywania (z małym opóźnieniem dla wydajności)
+            const query = this.value;
+            suggestionTimeout = setTimeout(() => {
+                showSearchSuggestions(query);
+            }, 100);
+        });
+        
+        searchInput.addEventListener('focus', function() {
+            if (this.value.trim().length > 0) {
+                showSearchSuggestions(this.value);
+            }
+        });
+        
+        // Obsługa klawiatury w sugestiach
+        searchInput.addEventListener('keydown', function(e) {
+            const suggestions = document.getElementById('searchSuggestions');
+            if (!suggestions.classList.contains('show')) return;
+            
+            const highlighted = suggestions.querySelector('.suggestion-item.highlighted');
+            const items = Array.from(suggestions.querySelectorAll('.suggestion-item'));
+            
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (highlighted) {
+                    const currentIndex = items.indexOf(highlighted);
+                    if (currentIndex < items.length - 1) {
+                        highlighted.classList.remove('highlighted');
+                        items[currentIndex + 1].classList.add('highlighted');
+                    }
+                } else if (items.length > 0) {
+                    items[0].classList.add('highlighted');
+                }
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                if (highlighted) {
+                    const currentIndex = items.indexOf(highlighted);
+                    if (currentIndex > 0) {
+                        highlighted.classList.remove('highlighted');
+                        items[currentIndex - 1].classList.add('highlighted');
+                    } else {
+                        highlighted.classList.remove('highlighted');
+                    }
+                }
+            } else if (e.key === 'Enter' && highlighted) {
+                e.preventDefault();
+                const cleanText = highlighted.textContent || highlighted.innerText;
+                this.value = cleanText;
+                suggestions.classList.remove('show');
+                applyFilters();
+            } else if (e.key === 'Escape') {
+                suggestions.classList.remove('show');
+            }
+        });
+        
+        // Ukryj sugestie po kliknięciu poza nimi
+        document.addEventListener('click', function(e) {
+            const suggestions = document.getElementById('searchSuggestions');
+            const searchGroup = searchInput.closest('.filter-group');
+            if (!searchGroup.contains(e.target)) {
+                suggestions.classList.remove('show');
+            }
+        });
+        
+        const modal = document.getElementById('imageModal');
+        const img = document.getElementById('modalImage');
+        
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal || e.target.classList.contains('image-modal-close')) {
+                closeImageModal();
+            }
+        });
+
+        // Status synchronizacji (rekordy z poczekalni są wysyłane w tle przez serwer co N minut)
+        {% if show_sync_status %}
+        updateSyncStatus();
+        setInterval(updateSyncStatus, 30000); // Odśwież co 30 sekund
+
+        function updateSyncStatus() {
+            fetch('/api/sync/status/')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const dot = document.getElementById('syncStatusDot');
+                        if (dot) {
+                            dot.className = 'sync-status-dot ' + (data.is_success ? 'success' : 'error');
+                            dot.title = data.is_success ? 'Synchronizacja działa poprawnie' : 'Błąd synchronizacji';
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Błąd podczas sprawdzania statusu synchronizacji:', error);
+                });
+        }
+        {% endif %}
+
+    });
+
+    // Funkcje modala poczekalni
+    function openPendingQueueModal() {
+        const modal = document.getElementById('pendingQueueModal');
+        if (modal) {
+            modal.classList.add('active');
+            loadPendingRecords();
+        }
+    }
+
+    function closePendingQueueModal() {
+        const modal = document.getElementById('pendingQueueModal');
+        if (modal) {
+            modal.classList.remove('active');
+        }
+    }
+
+    function loadPendingRecords(retryCount) {
+        retryCount = retryCount || 0;
+        const maxRetries = 2;
+        const container = document.getElementById('pendingQueueTableContainer');
+        container.innerHTML = '<p style="text-align: center; color: #64748b;">Ładowanie...</p>';
+        
+        fetch('/api/sync/pending/')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('HTTP ' + response.status);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data && data.success === true) {
+                    if (data.count === 0) {
+                        container.innerHTML = '<p style="text-align: center; color: #64748b; padding: 2rem;">Brak rekordów w poczekalni. Wszystko zsynchronizowane!</p>';
+                    } else {
+                        let html = '<table class="pending-queue-table"><thead><tr><th>Typ</th><th>ID</th><th>Linia</th><th>Operator</th><th>Szczegóły</th><th>Data utworzenia</th></tr></thead><tbody>';
+                        (data.records || []).forEach(record => {
+                            const line = record.line != null ? String(record.line) : '-';
+                            const user = record.user != null ? String(record.user) : '-';
+                            const details = record.details != null ? String(record.details) : '';
+                            const createdAt = record.created_at != null ? String(record.created_at) : '—';
+                            html += `<tr>
+                                <td><span class="badge badge-${record.type === 'measurement' ? 'measurement' : 'defect'}">${record.type_display || record.type}</span></td>
+                                <td>#${record.id}</td>
+                                <td>${line}</td>
+                                <td>${user}</td>
+                                <td>${details}</td>
+                                <td>${createdAt}</td>
+                            </tr>`;
+                        });
+                        html += '</tbody></table>';
+                        container.innerHTML = html;
+                    }
+                } else {
+                    if (retryCount < maxRetries) {
+                        setTimeout(function() { loadPendingRecords(retryCount + 1); }, 2000);
+                    } else {
+                        container.innerHTML = '<p style="text-align: center; color: #ef4444; padding: 2rem;">Błąd podczas ładowania danych</p>';
+                    }
+                }
+            })
+            .catch(error => {
+                if (retryCount < maxRetries) {
+                    setTimeout(function() { loadPendingRecords(retryCount + 1); }, 2000);
+                } else {
+                    container.innerHTML = '<p style="text-align: center; color: #ef4444; padding: 2rem;">Błąd połączenia z serwerem</p>';
+                    console.error('Błąd:', error);
+                }
+            });
+    }
+
+    function syncPendingRecords() {
+        const btn = document.getElementById('syncNowBtn');
+        const originalText = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = 'Wysyłanie...';
+        
+        fetch('/api/sync/now/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showSuccessNotification(`Zsynchronizowano ${data.synced_count} rekordów${data.failed_count > 0 ? ` (${data.failed_count} błędów)` : ''}`);
+                    loadPendingRecords();
+                    // Odśwież stronę po 2 sekundach aby zobaczyć zmiany
+                    setTimeout(() => {
+                        location.reload();
+                    }, 2000);
+                } else {
+                    showErrorNotification('Błąd synchronizacji: ' + (data.error || 'Nieznany błąd'));
+                }
+                btn.disabled = false;
+                btn.textContent = originalText;
+            })
+            .catch(error => {
+                showErrorNotification('Błąd połączenia z serwerem');
+                btn.disabled = false;
+                btn.textContent = originalText;
+                console.error('Błąd:', error);
+            });
+    }
+
+    // Zamykanie modala po kliknięciu poza nim lub ESC
+    document.addEventListener('click', function(e) {
+        const modal = document.getElementById('pendingQueueModal');
+        if (modal && e.target === modal) {
+            closePendingQueueModal();
+        }
+    });
+    
+    // Zamykanie modala klawiszem ESC
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            const modal = document.getElementById('pendingQueueModal');
+            if (modal && modal.classList.contains('active')) {
+                closePendingQueueModal();
+            }
+        }
+    });
+</script>
+{% endblock %}

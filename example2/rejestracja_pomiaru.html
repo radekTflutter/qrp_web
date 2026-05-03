@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QRP Control System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 50%, #e2e8f0 100%);
+            min-height: 100vh;
+        }
+
+        /* Navbar */
+        .navbar {
+            background: #1e293b;
+            border-bottom: 1px solid #334155;
+            padding: 1rem 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+        }
+
+        .navbar-left {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .navbar h1 {
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: white;
+            letter-spacing: -0.025em;
+        }
+
+        .navbar-brand span {
+            color: #cbd5e1;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        /* Navigation Menu */
+        .nav-menu {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .nav-link {
+            color: #cbd5e1;
+            text-decoration: none;
+            padding: 0.625rem 1.25rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .nav-link.active {
+            background: linear-gradient(135deg, #06b6d4 0%, #2563eb 100%);
+            color: white;
+        }
+
+        /* Hamburger Menu */
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            gap: 0.375rem;
+            cursor: pointer;
+            padding: 0.5rem;
+        }
+
+        .hamburger span {
+            width: 25px;
+            height: 3px;
+            background: white;
+            border-radius: 2px;
+            transition: all 0.3s;
+        }
+
+        .hamburger.active span:nth-child(1) {
+            transform: rotate(45deg) translate(7px, 7px);
+        }
+
+        .hamburger.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .hamburger.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(7px, -7px);
+        }
+
+        /* Mobile Menu */
+        .mobile-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #1e293b;
+            border-top: 1px solid #334155;
+            padding: 1rem;
+            flex-direction: column;
+            gap: 0.5rem;
+            z-index: 1000;
+        }
+
+        .mobile-menu.show {
+            display: flex;
+        }
+
+        .mobile-menu .nav-link {
+            width: 100%;
+            text-align: center;
+        }
+
+        /* User Section */
+        .navbar-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            position: relative;
+        }
+
+        .user-name {
+            color: #cbd5e1;
+            font-size: 0.875rem;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #06b6d4 0%, #2563eb 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .user-avatar:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(6, 182, 212, 0.4);
+        }
+
+        /* Tooltip */
+        .user-avatar::before {
+            content: attr(data-name);
+            position: absolute;
+            bottom: -45px;
+            right: 0;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        .user-avatar::after {
+            content: '';
+            position: absolute;
+            bottom: -7px;
+            right: 12px;
+            width: 0;
+            height: 0;
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+            border-bottom: 6px solid rgba(0, 0, 0, 0.9);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        .user-avatar:hover::before,
+        .user-avatar:hover::after {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* User Menu Dropdown */
+        .user-menu {
+            position: absolute;
+            top: 55px;
+            right: 0;
+            background: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            padding: 0.75rem;
+            width: 280px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s;
+            z-index: 1000;
+            border: 1px solid #e2e8f0;
+        }
+
+        .user-menu.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .user-menu-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            border-bottom: 1px solid #e2e8f0;
+            margin-bottom: 0.5rem;
+        }
+
+        .user-menu-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #06b6d4 0%, #2563eb 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.25rem;
+        }
+
+        .user-menu-info {
+            flex: 1;
+        }
+
+        .user-menu-name {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 0.125rem;
+        }
+
+        .user-menu-email {
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+
+        .user-menu-actions {
+            padding: 0.5rem 0;
+        }
+
+        .user-menu-button {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            background: transparent;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #334155;
+            text-align: left;
+        }
+
+        .user-menu-button:hover {
+            background: #f1f5f9;
+        }
+
+        .user-menu-button.logout {
+            color: #dc2626;
+        }
+
+        .user-menu-button.logout:hover {
+            background: #fef2f2;
+        }
+
+        .user-menu-icon {
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+        }
+
+        /* Main Content */
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 2fr 1fr;
+            gap: 1.5rem;
+            padding: 1.5rem;
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+
+        .panel {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            border: 1px solid #cbd5e1;
+        }
+
+        .panel h2 {
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: #1e293b;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        /* Form */
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-group label {
+            display: block;
+            color: #334155;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            background: #f1f5f9;
+            border: 2px solid #94a3b8;
+            border-radius: 0.5rem;
+            color: #0f172a;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #4f46e5;
+            background: white;
+        }
+
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        .form-group select {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 1.25rem;
+            padding-right: 2.5rem;
+        }
+
+        .info-display {
+            background: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            padding: 0.75rem 1rem;
+            margin-bottom: 1rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .info-display strong {
+            color: #1e40af;
+        }
+
+        .info-display span {
+            color: #1e3a8a;
+            font-weight: 600;
+        }
+
+        .btn-register {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            border: none;
+            border-radius: 0.75rem;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.4);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .btn-register:hover {
+            box-shadow: 0 20px 25px -5px rgba(79, 70, 229, 0.4);
+            transform: translateY(-2px);
+        }
+
+        /* Camera */
+        .camera-container {
+            background: #000;
+            border-radius: 0.75rem;
+            overflow: hidden;
+            aspect-ratio: 16/9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .camera-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .camera-placeholder {
+            color: #64748b;
+            font-size: 1rem;
+            text-align: center;
+        }
+
+        /* Last Record */
+        .last-record-image {
+            width: 100%;
+            aspect-ratio: 16/9;
+            background: #f1f5f9;
+            border-radius: 0.75rem;
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+
+        .last-record-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .record-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .record-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            padding: 0.75rem;
+            background: #f8fafc;
+            border-radius: 0.5rem;
+            border-left: 3px solid #cbd5e1;
+        }
+
+        .record-item label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: #64748b;
+            letter-spacing: 0.05em;
+        }
+
+        .record-item span {
+            font-size: 0.875rem;
+            color: #1e293b;
+            font-weight: 500;
+        }
+
+        .record-item.highlight {
+            border-left-color: #3b82f6;
+            background: #eff6ff;
+        }
+
+        .alert {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 0.75rem;
+            padding: 0.75rem 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .alert.success {
+            background: rgba(34, 197, 94, 0.1);
+            border-color: rgba(34, 197, 94, 0.3);
+        }
+
+        .alert p {
+            color: #ef4444;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .alert.success p {
+            color: #16a34a;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Tutorial Overlay */
+        .tutorial-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .tutorial-overlay.active {
+            display: flex;
+        }
+
+        .tutorial-content {
+            background: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            max-width: 500px;
+            text-align: center;
+            position: relative;
+        }
+
+        .tutorial-content h3 {
+            font-size: 1.5rem;
+            color: #1e293b;
+            margin-bottom: 1rem;
+        }
+
+        .tutorial-content p {
+            color: #64748b;
+            font-size: 1rem;
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+
+        .tutorial-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        .tutorial-btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .tutorial-btn-primary {
+            background: linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+        }
+
+        .tutorial-btn-secondary {
+            background: #f1f5f9;
+            color: #334155;
+        }
+
+        .tutorial-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .tutorial-step {
+            position: absolute;
+            background: white;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            max-width: 350px;
+            z-index: 10000;
+        }
+
+        .tutorial-step h4 {
+            color: #1e293b;
+            font-size: 1.125rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .tutorial-step p {
+            color: #64748b;
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+            line-height: 1.5;
+        }
+
+        .tutorial-step-number {
+            position: absolute;
+            top: -12px;
+            left: 1rem;
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #06b6d4 0%, #2563eb 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 0.875rem;
+        }
+
+        .tutorial-arrow {
+            position: absolute;
+            width: 0;
+            height: 0;
+        }
+
+        .tutorial-arrow.top {
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-top: 10px solid white;
+        }
+
+        .tutorial-arrow.bottom {
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-bottom: 10px solid white;
+        }
+
+        /* Highlight Element */
+        .tutorial-highlight {
+            position: relative;
+            z-index: 9998;
+            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.75);
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .nav-menu {
+                display: none;
+            }
+
+            .hamburger {
+                display: flex;
+            }
+
+            .container {
+                grid-template-columns: 1fr;
+            }
+
+            .user-name {
+                display: none;
+            }
+        }
+
+        @media (max-height: 700px) {
+            .navbar {
+                padding: 0.5rem 1rem;
+            }
+
+            .container {
+                padding: 1rem;
+                gap: 1rem;
+            }
+
+            .panel {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <div class="navbar">
+        <div class="navbar-left">
+            <div class="navbar-brand">
+                <h1>QRP</h1>
+                <span>Control System</span>
+            </div>
+            
+            <!-- Desktop Menu -->
+            <nav class="nav-menu">
+                <a href="#measurements" class="nav-link active" onclick="showPage('measurements')">Rejestracja Pomiarów</a>
+                <a href="#defects" class="nav-link" onclick="showPage('defects')">Rejestracja Wad</a>
+                <a href="#archive" class="nav-link" onclick="showPage('archive')">Archiwum</a>
+                <a href="#help" class="nav-link" onclick="startTutorial()">Pomoc</a>
+            </nav>
+
+            <!-- Hamburger -->
+            <div class="hamburger" id="hamburger" onclick="toggleMobileMenu()">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+
+        <div class="navbar-right">
+            <span class="user-name">Jan Kowalski</span>
+            <div class="user-avatar" data-name="Jan Kowalski" id="userAvatar">JK</div>
+            
+            <!-- User Menu -->
+            <div class="user-menu" id="userMenu">
+                <div class="user-menu-header">
+                    <div class="user-menu-avatar">JK</div>
+                    <div class="user-menu-info">
+                        <div class="user-menu-name">Jan Kowalski</div>
+                        <div class="user-menu-email">jan.kowalski@canpack.com</div>
+                    </div>
+                </div>
+                <div class="user-menu-actions">
+                    <button class="user-menu-button logout" onclick="handleLogout()">
+                        <svg class="user-menu-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        </svg>
+                        Wyloguj się
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Menu -->
+        <div class="mobile-menu" id="mobileMenu">
+            <a href="#measurements" class="nav-link active" onclick="showPage('measurements'); toggleMobileMenu()">Rejestracja Pomiarów</a>
+            <a href="#defects" class="nav-link" onclick="showPage('defects'); toggleMobileMenu()">Rejestracja Wad</a>
+            <a href="#archive" class="nav-link" onclick="showPage('archive'); toggleMobileMenu()">Archiwum</a>
+            <a href="#help" class="nav-link" onclick="startTutorial(); toggleMobileMenu()">Pomoc</a>
+        </div>
+    </div>
+
+    <!-- Page: Measurements -->
+    <div id="page-measurements" class="page-content">
+        <div class="container">
+            <div class="panel">
+                <h2>Rejestracja Pomiaru</h2>
+                
+                <div id="alert-measurements" class="alert hidden">
+                    <p id="alert-message-measurements"></p>
+                </div>
+
+                <form id="measurementForm">
+                    <div class="form-group" id="step-line">
+                        <label for="line">Wybór linii</label>
+                        <select id="line" required>
+                            <option value="">Wybierz linię...</option>
+                            <option value="Linia 2">Linia 2</option>
+                            <option value="Linia 3">Linia 3</option>
+                        </select>
+                    </div>
+
+                    <div id="orderDisplay" class="info-display hidden">
+                        <strong>Numer zlecenia:</strong> <span id="orderNumber">-</span>
+                    </div>
+
+                    <div class="form-group" id="step-control">
+                        <label for="controlType">Typ kontroli</label>
+                        <select id="controlType" required>
+                            <option value="Standardowe" selected>Standardowe</option>
+                            <option value="Ponowna kontrola">Ponowna kontrola</option>
+                            <option value="Testowe">Testowe</option>
+                            <option value="Walidacja procesu">Walidacja procesu</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" id="step-test">
+                        <label for="testType">Rodzaj testu</label>
+                        <select id="testType" required>
+                            <option value="">Wybierz rodzaj testu...</option>
+                            <option value="1">1. Pokrycie lakierem - CuSO4</option>
+                            <option value="2">2. Pokrycie denka - CuSO4</option>
+                            <option value="3">3. Ilość oleju (talk)</option>
+                            <option value="4">4. Pokrycie kołnierza - CuSO4</option>
+                            <option value="5">5. Test kompleksowy</option>
+                        </select>
+                    </div>
+
+                    <div id="testTypeDisplay" class="info-display hidden">
+                        <strong>Wybrany test:</strong><br>
+                        <span id="testTypeText">-</span>
+                    </div>
+
+                    <div class="form-group" id="step-comment">
+                        <label for="comment">Komentarz (opcjonalnie)</label>
+                        <textarea id="comment" placeholder="Dodaj uwagi..."></textarea>
+                    </div>
+
+                    <button type="submit" class="btn-register" id="step-submit">
+                        Zarejestruj pomiar
+                    </button>
+                </form>
+            </div>
+
+            <div class="panel">
+                <h2>Podgląd z Kamery</h2>
+                <div class="camera-container">
+                    <div class="camera-placeholder">
+                        <p>🎥 Live Camera Stream</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h2>Ostatni Zapis</h2>
+                <div class="last-record-image">
+                    <img src="https://via.placeholder.com/640x360/4f46e5/ffffff?text=Ostatni+Pomiar" alt="Last">
+                </div>
+                <div class="record-info">
+                    <div class="record-item highlight">
+                        <label>Linia</label>
+                        <span>Linia 2</span>
+                    </div>
+                    <div class="record-item">
+                        <label>Numer zlecenia</label>
+                        <span>ZL-2024-001</span>
+                    </div>
+                    <div class="record-item">
+                        <label>Typ kontroli</label>
+                        <span>Standardowe</span>
+                    </div>
+                    <div class="record-item">
+                        <label>Rodzaj testu</label>
+                        <span>1. Pokrycie lakierem - CuSO4</span>
+                    </div>
+                    <div class="record-item">
+                        <label>Data zapisu</label>
+                        <span>2024-12-30 14:32</span>
+                    </div>
+                    <div class="record-item">
+                        <label>Komentarz</label>
+                        <span>Pomiar w normie</span>
+                    </div>
+                    <div class="

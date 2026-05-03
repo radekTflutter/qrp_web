@@ -1,0 +1,62 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block content %}
+  <h1>{{ title }}</h1>
+
+  <div style="max-width: 900px;">
+    <p>
+      Import tworzy/aktualizuje użytkowników oraz przypisuje im karty RFID, zgodnie z logiką logowania w aplikacji.
+      Najpewniej przygotujesz plik w Excelu i zapiszesz jako <strong>CSV UTF-8</strong>.
+    </p>
+
+    <h2>Nomenklatura pliku (nagłówki kolumn)</h2>
+    <ul>
+      {% for col in required_columns %}
+        <li><strong>{{ col }}</strong></li>
+      {% endfor %}
+    </ul>
+
+    <p style="margin-top: 1rem;">
+      <strong>Przykład CSV:</strong><br>
+      <code>numer_kj,numer_karty,login</code><br>
+      <code>KJ10,04A1B2C3D4,jan.kowalski</code><br>
+      <code>10,04FFEEDDCC,anna.nowak</code>
+    </p>
+
+    <h2>Wgraj plik</h2>
+    <form method="post" enctype="multipart/form-data" style="margin-top: 0.75rem;">
+      {% csrf_token %}
+      <fieldset class="module aligned">
+        {{ form.as_p }}
+      </fieldset>
+      <div class="submit-row">
+        <input type="submit" value="Importuj" class="default">
+        <a class="button" href="../">Powrót</a>
+      </div>
+    </form>
+
+    {% if results %}
+      <h2>Wynik importu {% if dry_run %}(TRYB TESTOWY){% endif %}</h2>
+      <ul>
+        <li><strong>Użytkownicy utworzeni:</strong> {{ results.created_users }}</li>
+        <li><strong>Użytkownicy zaktualizowani:</strong> {{ results.updated_users }}</li>
+        <li><strong>Karty utworzone:</strong> {{ results.created_cards }}</li>
+        <li><strong>Karty zaktualizowane:</strong> {{ results.updated_cards }}</li>
+        <li><strong>Pominięte wiersze:</strong> {{ results.skipped }}</li>
+      </ul>
+
+      {% if results.errors %}
+        <h3>Błędy / ostrzeżenia</h3>
+        <div style="background: #fff7ed; border: 1px solid #fed7aa; padding: 12px; border-radius: 8px;">
+          <ul style="margin: 0; padding-left: 20px;">
+            {% for e in results.errors %}
+              <li>{{ e }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% endif %}
+    {% endif %}
+  </div>
+{% endblock %}
+

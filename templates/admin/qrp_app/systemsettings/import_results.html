@@ -1,0 +1,137 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static admin_modify %}
+
+{% block title %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+<a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+&rsaquo; <a href="{% url 'admin:app_list' app_label='qrp_app' %}">Qrp app</a>
+&rsaquo; <a href="{% url 'admin:qrp_app_systemsettings_changelist' %}">Ustawienia systemowe</a>
+&rsaquo; Import ustawień - wyniki testowe
+</div>
+{% endblock %}
+
+{% block content %}
+<h1>Import ustawień - wyniki testowe</h1>
+
+<p><strong>To jest tryb testowy - żadne dane nie zostały zapisane.</strong></p>
+
+<div class="results-summary">
+    <h2>Podsumowanie</h2>
+    <ul>
+        <li><strong>Utworzonych:</strong> {{ results.created }}</li>
+        <li><strong>Zaktualizowanych:</strong> {{ results.updated }}</li>
+        {% if results.deleted %}
+        <li><strong>Usuniętych (tryb nadpisywania):</strong> {{ results.deleted }}</li>
+        {% endif %}
+        <li><strong>Błędów:</strong> {{ results.errors|length }}</li>
+        <li><strong>Ostrzeżeń:</strong> {{ results.warnings|length }}</li>
+    </ul>
+</div>
+
+{% if results.errors %}
+<div class="errorlist">
+    <h2>Błędy:</h2>
+    <ul>
+        {% for error in results.errors %}
+            <li>{{ error }}</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+{% if results.warnings %}
+<div class="warninglist">
+    <h2>Ostrzeżenia:</h2>
+    <ul>
+        {% for warning in results.warnings %}
+            <li>{{ warning }}</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+{% if results.success and results.errors|length == 0 %}
+<div class="success-message">
+    <p><strong>✓ Import wygląda poprawnie!</strong> Możesz teraz wykonać rzeczywisty import (odznacz "Tryb testowy").</p>
+</div>
+{% endif %}
+
+<form method="post" enctype="multipart/form-data" style="margin-top: 20px;">
+    {% csrf_token %}
+    
+    <fieldset class="module aligned">
+        <div class="form-row">
+            <div>
+                <label for="{{ form.file.id_for_label }}">{{ form.file.label }}:</label>
+                {{ form.file }}
+            </div>
+        </div>
+        
+        <div class="form-row">
+            <div>
+                <label for="{{ form.dry_run.id_for_label }}">
+                    {{ form.dry_run }}
+                    {{ form.dry_run.label }}
+                </label>
+            </div>
+        </div>
+        
+        <div class="form-row">
+            <div>
+                <label for="{{ form.overwrite_mode.id_for_label }}">
+                    {{ form.overwrite_mode }}
+                    {{ form.overwrite_mode.label }}
+                </label>
+            </div>
+        </div>
+    </fieldset>
+    
+    <div class="submit-row">
+        {% if results.success and results.errors|length == 0 %}
+            <input type="submit" value="Wykonaj rzeczywisty import (bez trybu testowego)" class="default" />
+        {% else %}
+            <input type="submit" value="Spróbuj ponownie" class="default" />
+        {% endif %}
+        <a href="{% url 'admin:qrp_app_systemsettings_changelist' %}" class="button">Anuluj</a>
+    </div>
+</form>
+
+<style>
+.results-summary {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 4px;
+    margin: 20px 0;
+}
+.results-summary ul {
+    list-style: none;
+    padding: 0;
+}
+.results-summary li {
+    padding: 5px 0;
+}
+.errorlist {
+    background: #f8d7da;
+    color: #721c24;
+    padding: 15px;
+    border-radius: 4px;
+    margin: 20px 0;
+}
+.warninglist {
+    background: #fff3cd;
+    color: #856404;
+    padding: 15px;
+    border-radius: 4px;
+    margin: 20px 0;
+}
+.success-message {
+    background: #d4edda;
+    color: #155724;
+    padding: 15px;
+    border-radius: 4px;
+    margin: 20px 0;
+}
+</style>
+{% endblock %}

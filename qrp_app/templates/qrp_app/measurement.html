@@ -1,0 +1,1415 @@
+{% extends 'qrp_app/base.html' %}
+
+
+{% block extra_css %}
+<style>
+    .measurement-container {
+        display: grid;
+        grid-template-columns: 1fr 2fr 1fr;
+        gap: 1.5rem;
+        align-items: stretch;
+        /* Edge compatibility */
+        -ms-grid-columns: 1fr 1.5rem 2fr 1.5rem 1fr;
+    }
+
+    .panel {
+        background: white;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        /* Edge compatibility */
+        box-sizing: border-box;
+        min-height: 0;
+        -ms-flex-direction: column;
+    }
+
+    .panel h2 {
+        font-size: 1.5rem;
+        font-weight: 900;
+        color: #1e293b;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid #e2e8f0;
+    }
+
+    .form-group {
+        margin-bottom: 1.25rem;
+    }
+
+    .form-group label {
+        display: block;
+        color: #334155;
+        font-size: 0.875rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.5rem;
+    }
+
+    body.dark-mode .form-group label {
+        color: #e2e8f0;
+    }
+
+    .form-group select,
+    .form-group textarea {
+        width: 100%;
+        padding: 0.875rem 1rem;
+        background: #f1f5f9;
+        border: 2px solid #94a3b8;
+        border-radius: 0.5rem;
+        color: #0f172a;
+        font-size: 1rem;
+        font-weight: 500;
+        transition: all 0.3s;
+        font-family: inherit;
+    }
+
+    .form-group select:focus,
+    .form-group textarea:focus {
+        outline: none;
+        border-color: #4f46e5;
+        background: white;
+    }
+
+    .form-group textarea {
+        min-height: 115px;
+        resize: vertical;
+    }
+
+    .test-type-display {
+        margin-top: 0.5rem;
+        padding: 0.75rem;
+        background: #f8fafc;
+        border-radius: 0.5rem;
+        border: 1px solid #e2e8f0;
+        font-size: 0.875rem;
+        color: #334155;
+        white-space: pre-line;
+        line-height: 1.6;
+    }
+
+    body.dark-mode .test-type-display {
+        background: #1e293b;
+        border-color: #334155;
+        color: #e2e8f0;
+    }
+
+    .btn-register {
+        width: 100%;
+        padding: 1rem;
+        background: linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%);
+        color: white;
+        border: none;
+        border-radius: 0.75rem;
+        font-size: 1rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s;
+        box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.4);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .btn-register:hover {
+        box-shadow: 0 20px 25px -5px rgba(79, 70, 229, 0.4);
+        transform: translateY(-2px);
+    }
+
+    .camera-container {
+        background: #000;
+        border-radius: 0.75rem;
+        overflow: hidden;
+        /* Edge compatibility - fallback before aspect-ratio */
+        position: relative;
+        width: 100%;
+        padding-bottom: 56.25%; /* 16/9 = 0.5625 */
+        aspect-ratio: 16/9;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #64748b;
+        font-size: 1rem;
+    }
+
+    .camera-container > img,
+    .camera-container > p {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+    }
+
+    /* Style powiadomień są teraz w base.html */
+
+    .last-record-info {
+        background: #f8fafc;
+        border-radius: 0.75rem;
+        padding: 1rem;
+        margin-top: 1rem;
+        border: 1px solid #e2e8f0;
+    }
+
+    .last-record-info h3 {
+        font-size: 0.875rem;
+        font-weight: 700;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.75rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    body.dark-mode .last-record-info h3 {
+        color: #e2e8f0;
+        border-bottom-color: #334155;
+    }
+
+    .info-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+        font-size: 0.875rem;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .info-item:last-child {
+        border-bottom: none;
+    }
+
+    .info-label {
+        color: #64748b;
+        font-weight: 600;
+        min-width: 120px;
+    }
+
+    .info-value {
+        color: #1e293b;
+        font-weight: 500;
+        text-align: right;
+        flex: 1;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        word-break: break-word;
+        max-width: 60%;
+    }
+
+    body.dark-mode .last-record-info {
+        background: #0f172a;
+        border-color: #334155;
+    }
+
+    body.dark-mode .info-label {
+        color: #94a3b8;
+    }
+
+    body.dark-mode .info-value {
+        color: #e2e8f0;
+    }
+
+    body.dark-mode .info-item {
+        border-bottom-color: #334155;
+    }
+
+    .last-record-wrapper {
+        display: flex;
+        gap: 1rem;
+        align-items: flex-start;
+        flex-direction: column; /* default (horyzontal): jak "Ostatnia wada" -> zdjęcie nad szczegółami */
+    }
+
+    .last-record-thumbnail {
+        flex-shrink: 0;
+        width: 100%;
+        height: auto;
+        aspect-ratio: 16 / 9;
+        background: #f1f5f9;
+        border-radius: 0.5rem;
+        overflow: hidden;
+        position: relative;
+        border: 2px solid #e2e8f0;
+        transition: all 0.3s;
+    }
+
+    .last-record-thumbnail[onclick] {
+        cursor: pointer;
+    }
+
+    .last-record-thumbnail[onclick]:hover {
+        border-color: #4f46e5;
+        transform: scale(1.05);
+    }
+
+    .last-record-thumbnail img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+
+    .last-record-thumbnail-placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #64748b;
+        font-size: 0.875rem;
+    }
+
+    .last-record-info {
+        flex: 1;
+        margin-top: 0;
+    }
+
+    .image-modal {
+        display: none;
+        position: fixed;
+        z-index: 10000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.9);
+        cursor: zoom-out;
+    }
+
+    .image-modal.active {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .image-modal-content {
+        max-width: 90%;
+        max-height: 90%;
+        object-fit: contain;
+        transition: transform 0.3s;
+        cursor: zoom-in;
+    }
+
+    .image-modal-content.zoomed {
+        cursor: grab;
+    }
+
+    .image-modal-content.zoomed:active {
+        cursor: grabbing;
+    }
+
+    .image-modal-close {
+        position: absolute;
+        top: 20px;
+        right: 40px;
+        color: #f1f1f1;
+        font-size: 40px;
+        font-weight: bold;
+        cursor: pointer;
+        background: rgba(0, 0, 0, 0.5);
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.3s;
+    }
+
+    .image-modal-close:hover {
+        background: rgba(0, 0, 0, 0.8);
+    }
+
+    /* ≤1200px: miniaturka obok szczegółów (tryb horyzontalny) */
+    @media (max-width: 1200px) {
+        .last-record-wrapper {
+            flex-direction: row;
+        }
+
+        .last-record-thumbnail {
+            width: 150px;
+            height: 100px;
+            aspect-ratio: auto;
+        }
+    }
+
+    .tutorial-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.85);
+        z-index: 9998;
+        display: none;
+    }
+
+    .tutorial-overlay.active {
+        display: block;
+    }
+
+    .tutorial-highlight {
+        position: relative;
+        z-index: 9999 !important;
+        box-shadow: 0 0 0 4px #06b6d4, 0 0 0 9999px rgba(0, 0, 0, 0.85) !important;
+        border-radius: 0.5rem;
+    }
+
+    .tutorial-step {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: white;
+        border-radius: 1rem;
+        padding: 2rem;
+        padding-top: 2.5rem;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+        max-width: 420px;
+        width: 90%;
+        max-height: 90vh;
+        overflow-y: auto;
+        overflow-x: visible;
+        z-index: 10000;
+        transition: all 0.5s ease;
+    }
+
+    .tutorial-step-number {
+        position: absolute;
+        top: 5px;
+        left: 2rem;
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(135deg, #06b6d4 0%, #2563eb 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 900;
+        font-size: 1.125rem;
+        box-shadow: 0 4px 12px rgba(6, 182, 212, 0.4);
+        z-index: 10001;
+    }
+
+    .tutorial-step h3 {
+        color: #1e293b;
+        font-size: 1.5rem;
+        font-weight: 900;
+        margin-bottom: 1rem;
+        margin-top: 0.5rem;
+    }
+
+    .tutorial-step p {
+        color: #64748b;
+        font-size: 1rem;
+        line-height: 1.6;
+        margin-bottom: 1.5rem;
+    }
+
+    .tutorial-step-hint {
+        background: #fef3c7;
+        border-left: 4px solid #f59e0b;
+        padding: 0.75rem 1rem;
+        border-radius: 0.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .tutorial-step-hint p {
+        color: #92400e;
+        font-size: 0.875rem;
+        margin: 0;
+        font-weight: 600;
+    }
+
+    .tutorial-buttons {
+        display: flex;
+        gap: 1rem;
+        justify-content: space-between;
+    }
+
+    .tutorial-btn {
+        flex: 1;
+        padding: 0.875rem 1.5rem;
+        border-radius: 0.75rem;
+        border: none;
+        font-weight: 700;
+        font-size: 0.875rem;
+        cursor: pointer;
+        transition: all 0.3s;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .tutorial-btn-primary {
+        background: linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%);
+        color: white;
+    }
+
+    .tutorial-btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(79, 70, 229, 0.4);
+    }
+
+    .tutorial-btn-secondary {
+        background: #f1f5f9;
+        color: #334155;
+    }
+
+    .tutorial-btn-secondary:hover {
+        background: #e2e8f0;
+    }
+
+    .tutorial-btn-skip {
+        background: transparent;
+        color: #64748b;
+        border: 2px solid #e2e8f0;
+    }
+
+    .tutorial-btn-skip:hover {
+        border-color: #cbd5e1;
+    }
+
+    .tutorial-progress {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 1rem;
+        justify-content: center;
+    }
+
+    .progress-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #e2e8f0;
+        transition: all 0.3s;
+    }
+
+    .progress-dot.active {
+        background: linear-gradient(135deg, #06b6d4 0%, #2563eb 100%);
+        width: 24px;
+        border-radius: 4px;
+    }
+
+    .tutorial-arrow {
+        position: fixed;
+        width: 60px;
+        height: 60px;
+        z-index: 10001;
+        animation: bounce 2s infinite;
+        display: none;
+    }
+
+    .tutorial-arrow.show {
+        display: block;
+    }
+
+    @keyframes bounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+    }
+
+    .tutorial-arrow svg {
+        width: 100%;
+        height: 100%;
+        filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3));
+    }
+
+    .tutorial-welcome {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: white;
+        border-radius: 1.5rem;
+        padding: 3rem;
+        max-width: 600px;
+        text-align: center;
+        z-index: 10000;
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4);
+    }
+
+    .tutorial-welcome-icon {
+        width: 100px;
+        height: 100px;
+        background: linear-gradient(135deg, #06b6d4 0%, #2563eb 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 2rem;
+        box-shadow: 0 10px 30px rgba(6, 182, 212, 0.3);
+    }
+
+    .tutorial-welcome-icon svg {
+        width: 50px;
+        height: 50px;
+        color: white;
+    }
+
+    .tutorial-welcome h2 {
+        font-size: 2rem;
+        font-weight: 900;
+        color: #1e293b;
+        margin-bottom: 1rem;
+    }
+
+    .tutorial-welcome p {
+        font-size: 1.125rem;
+        color: #64748b;
+        line-height: 1.6;
+        margin-bottom: 2rem;
+    }
+
+    .tutorial-welcome-buttons {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+    }
+
+    @media (max-width: 1200px) {
+        .measurement-container {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 1200px), (max-height: 900px) and (orientation: portrait) {
+        .container {
+            padding: 1rem;
+        }
+
+        .measurement-container {
+            gap: 1rem;
+        }
+
+        .panel {
+            padding: 1rem;
+        }
+
+        .panel h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group textarea {
+            min-height: 115px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .tutorial-step {
+            max-width: 90%;
+            padding: 1.5rem;
+        }
+
+        .tutorial-welcome {
+            max-width: 90%;
+            padding: 2rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="measurement-container">
+        <div class="panel">
+            <h2>Rejestracja Pomiaru</h2>
+            
+            <form id="measurementForm">
+                <div class="form-group" id="step-line">
+                    <label for="line">Wybór linii</label>
+                    <select id="line" required>
+                        <option value="">Wybierz linię...</option>
+                        {% for linia in linie %}
+                        <option value="{{ linia.id }}" data-camera-url="{{ linia.url_kamery|default:'' }}" {% if auto_select_line and forloop.first %}selected{% endif %}>{{ linia.nazwa }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div id="orderNumberError" class="form-group" style="display: none; background: #fef3c7; border: 2px solid #f59e0b; border-radius: 0.5rem; padding: 0.75rem; margin-bottom: 1rem;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem; color: #92400e;">
+                        <svg style="width: 20px; height: 20px; flex-shrink: 0;" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        <span style="font-size: 0.875rem; font-weight: 600;">Nie udało się automatycznie pobrać numeru zlecenia z PLC. Wprowadź numer ręcznie.</span>
+                    </div>
+                </div>
+
+                <div id="orderNumberGroup" class="form-group" style="display: none;">
+                    <label for="orderNumber">Numer zlecenia <span style="color: #dc2626;">*</span></label>
+                    <input type="text" id="orderNumber" required placeholder="np. 1165382" style="width: 100%; padding: 0.875rem 1rem; background: #f1f5f9; border: 2px solid #94a3b8; border-radius: 0.5rem; color: #0f172a; font-size: 1rem; font-weight: 500; transition: all 0.3s; font-family: inherit;">
+                </div>
+
+                <div class="form-group" id="step-control">
+                    <label for="controlType">Typ kontroli</label>
+                    <select id="controlType" required>
+                        <option value="">Wybierz typ kontroli</option>
+                        {% for typ in typy_kontroli %}
+                        <option value="{{ typ.id }}" {% if domyslny_typ_kontroli_id == typ.id %}selected{% endif %}>{{ typ.nazwa }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group" id="step-test">
+                    <label for="testType">Rodzaj testu</label>
+                    <select id="testType" required>
+                        <option value="">Wybierz rodzaj testu...</option>
+                        {% for rodzaj in rodzaje_testu %}
+                        <option value="{{ rodzaj.id }}" data-full-text="{{ rodzaj.nazwa }}" {% if domyslny_rodzaj_testu_id == rodzaj.id %}selected{% endif %}>{{ rodzaj.kod }}. {{ rodzaj.nazwa }}</option>
+                        {% endfor %}
+                    </select>
+                    <div id="testTypeDisplay" class="test-type-display" style="display: none;"></div>
+                </div>
+
+                <div class="form-group" id="step-comment">
+                    <label for="comment">Komentarz (opcjonalnie)</label>
+                    <textarea id="comment" placeholder="Dodaj uwagi..."></textarea>
+                </div>
+
+                <button type="submit" class="btn-register" id="step-submit">
+                    Zarejestruj pomiar
+                </button>
+            </form>
+        </div>
+
+        <div class="panel">
+            <h2>Podgląd z Kamery</h2>
+            <div class="camera-container">
+                <img id="cameraImage" src="" alt="Podgląd z kamery" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; display: none;">
+                <p id="cameraPlaceholder" style="margin: 0;">🎥 Live Camera Stream</p>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h2>Ostatni Pomiar</h2>
+            <div id="lastRecordContainer">
+            {% if ostatni_pomiar %}
+            <div class="last-record-wrapper">
+                <div class="last-record-thumbnail" id="lastRecordThumbnail" {% if ostatni_pomiar.zdjecie %}onclick="showImageModal('{{ ostatni_pomiar.zdjecie.url }}')"{% endif %}>
+                    {% if ostatni_pomiar.zdjecie %}
+                    <img id="lastRecordImage" src="{{ ostatni_pomiar.zdjecie.url }}" alt="Ostatni pomiar">
+                    {% else %}
+                    <div id="lastRecordImagePlaceholder" class="last-record-thumbnail-placeholder">Brak zdjęcia</div>
+                    {% endif %}
+                </div>
+                <div class="last-record-info" id="lastRecordInfo">
+                    <h3>Szczegóły pomiaru</h3>
+                <div class="info-item">
+                    <span class="info-label">Data:</span>
+                    <span class="info-value" id="lastRecordData">{{ ostatni_pomiar.data_utworzenia|date:"Y-m-d H:i" }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Linia:</span>
+                    <span class="info-value" id="lastRecordLinia">{{ ostatni_pomiar.linia_produkcyjna.nazwa }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Typ kontroli:</span>
+                    <span class="info-value" id="lastRecordTypKontroli">{{ ostatni_pomiar.typ_kontroli }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Rodzaj testu:</span>
+                    <span class="info-value" id="lastRecordRodzajTestu">{{ ostatni_pomiar.get_rodzaj_testu_display }}</span>
+                </div>
+                <div id="lastRecordZlecenieContainer" {% if not ostatni_pomiar.numer_zlecenia %}style="display: none;"{% endif %} class="info-item">
+                    <span class="info-label">Zlecenie:</span>
+                    <span class="info-value" id="lastRecordZlecenie">{{ ostatni_pomiar.numer_zlecenia|default:'' }}</span>
+                </div>
+                <div id="lastRecordKomentarzContainer" {% if not ostatni_pomiar.komentarz %}style="display: none;"{% endif %} class="info-item">
+                    <span class="info-label">Komentarz:</span>
+                    <span class="info-value" id="lastRecordKomentarz">{{ ostatni_pomiar.komentarz|default:'' }}</span>
+                </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="last-record-wrapper">
+                <div class="last-record-thumbnail" id="lastRecordThumbnail">
+                    <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #64748b;">Brak zapisów</div>
+                </div>
+            </div>
+            {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="imageModal" class="image-modal">
+    <span class="image-modal-close" onclick="closeImageModal()">&times;</span>
+    <img id="modalImage" class="image-modal-content" src="" alt="Podgląd zdjęcia">
+</div>
+
+<div class="tutorial-overlay" id="tutorialOverlay"></div>
+
+<div class="tutorial-arrow" id="tutorialArrow">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="#06b6d4" stroke-width="3">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+    </svg>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const tutorialSteps = [
+        {
+            element: '#step-line',
+            title: 'Wybór linii produkcyjnej',
+            text: 'Rozpocznij od wyboru linii, na której wykonujesz pomiar. Kliknij na listę rozwijaną i wybierz swoją linię.',
+            hint: '💡 Po wyborze linii automatycznie pojawi się numer aktualnego zlecenia.',
+            position: 'right'
+        },
+        {
+            element: '#step-control',
+            title: 'Typ kontroli',
+            text: 'Określ rodzaj kontroli jakości. Domyślnie ustawione jest "Standardowe" - najczęściej używana opcja.',
+            hint: '💡 Wybierz "Ponowna kontrola" tylko jeśli wcześniejszy pomiar był niezgodny.',
+            position: 'right'
+        },
+        {
+            element: '#step-test',
+            title: 'Rodzaj testu',
+            text: 'Wybierz konkretny test, który chcesz przeprowadzić. Każdy test ma swój numer i opis procedury.',
+            hint: '💡 Upewnij się, że wybrany test odpowiada bieżącemu zleceniu produkcyjnemu.',
+            position: 'right'
+        },
+        {
+            element: '#step-comment',
+            title: 'Komentarz (opcjonalnie)',
+            text: 'Możesz dodać dodatkowe uwagi lub szczegóły dotyczące pomiaru. To pole jest opcjonalne, ale przydatne przy nietypowych sytuacjach.',
+            hint: '💡 Opisz dokładnie wszelkie odstępstwa od normy.',
+            position: 'right'
+        },
+        {
+            element: '#step-submit',
+            title: 'Rejestracja pomiaru',
+            text: 'Po wypełnieniu wszystkich wymaganych pól, kliknij ten przycisk aby zapisać pomiar. Zostanie automatycznie zrobione zdjęcie z kamery.',
+            hint: '✅ Sprawdź wszystkie dane przed zatwierdzeniem!',
+            position: 'top'
+        }
+    ];
+
+    let currentStep = 0;
+    let tutorialActive = false;
+
+    function startTutorial() {
+        tutorialActive = true;
+        showWelcomeScreen();
+    }
+
+    function showWelcomeScreen() {
+        const overlay = document.getElementById('tutorialOverlay');
+        overlay.classList.add('active');
+        
+        const welcome = document.createElement('div');
+        welcome.className = 'tutorial-welcome';
+        welcome.innerHTML = `
+            <div class="tutorial-welcome-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+            </div>
+            <h2>Witaj w samouczku!</h2>
+            <p>Poprowadzimy Cię krok po kroku przez proces rejestracji pomiaru. Samouczek zajmie około 2 minut.</p>
+            <div class="tutorial-welcome-buttons">
+                <button class="tutorial-btn tutorial-btn-skip" onclick="skipTutorial()">Pomiń</button>
+                <button class="tutorial-btn tutorial-btn-primary" onclick="beginTutorial()">Rozpocznij samouczek</button>
+            </div>
+        `;
+        
+        document.body.appendChild(welcome);
+    }
+
+    function beginTutorial() {
+        document.querySelector('.tutorial-welcome').remove();
+        currentStep = 0;
+        showStep(currentStep);
+    }
+
+    function showStep(stepIndex) {
+        const step = tutorialSteps[stepIndex];
+        const element = document.querySelector(step.element);
+        
+        if (!element) return;
+
+        element.classList.add('tutorial-highlight');
+        
+        const rect = element.getBoundingClientRect();
+        const stepBox = createStepBox(step, stepIndex);
+        
+        document.body.appendChild(stepBox);
+        
+        const arrow = document.getElementById('tutorialArrow');
+        arrow.classList.add('show');
+        arrow.style.left = Math.max(10, rect.left - 70) + 'px';
+        arrow.style.top = (rect.top + 20) + 'px';
+        
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function createStepBox(step, index) {
+        const box = document.createElement('div');
+        box.className = 'tutorial-step';
+        box.id = 'currentStepBox';
+        
+        const progressDots = tutorialSteps.map((_, i) => 
+            `<div class="progress-dot ${i === index ? 'active' : ''}"></div>`
+        ).join('');
+        
+        box.innerHTML = `
+            <div class="tutorial-step-number">${index + 1}</div>
+            <h3>${step.title}</h3>
+            <p>${step.text}</p>
+            ${step.hint ? `<div class="tutorial-step-hint"><p>${step.hint}</p></div>` : ''}
+            <div class="tutorial-buttons">
+                ${index > 0 ? '<button class="tutorial-btn tutorial-btn-secondary" onclick="previousStep()">Wstecz</button>' : '<button class="tutorial-btn tutorial-btn-skip" onclick="skipTutorial()">Pomiń</button>'}
+                <button class="tutorial-btn tutorial-btn-primary" onclick="${index < tutorialSteps.length - 1 ? 'nextStep()' : 'completeTutorial()'}">
+                    ${index < tutorialSteps.length - 1 ? 'Dalej' : 'Zakończ'}
+                </button>
+            </div>
+            <div class="tutorial-progress">
+                ${progressDots}
+            </div>
+        `;
+        
+        return box;
+    }
+
+    function nextStep() {
+        clearStep();
+        currentStep++;
+        if (currentStep < tutorialSteps.length) {
+            showStep(currentStep);
+        }
+    }
+
+    function previousStep() {
+        clearStep();
+        currentStep--;
+        if (currentStep >= 0) {
+            showStep(currentStep);
+        }
+    }
+
+    function clearStep() {
+        const stepBox = document.getElementById('currentStepBox');
+        if (stepBox) stepBox.remove();
+        
+        document.querySelectorAll('.tutorial-highlight').forEach(el => {
+            el.classList.remove('tutorial-highlight');
+        });
+        
+        document.getElementById('tutorialArrow').classList.remove('show');
+    }
+
+    function skipTutorial() {
+        clearStep();
+        document.getElementById('tutorialOverlay').classList.remove('active');
+        const welcome = document.querySelector('.tutorial-welcome');
+        if (welcome) welcome.remove();
+        tutorialActive = false;
+    }
+
+    function completeTutorial() {
+        clearStep();
+        document.getElementById('tutorialOverlay').classList.remove('active');
+        tutorialActive = false;
+        
+        showSuccessNotification('🎉 Gratulacje! Ukończyłeś samouczek. Teraz możesz samodzielnie rejestrować pomiary w systemie QRP.', 5000);
+    }
+
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('tour') === 'true') {
+        startTutorial();
+    }
+
+    // Inicjalizacja wyświetlania kamery z rejestratora
+    let cameraRefreshInterval = null;
+    const cameraImage = document.getElementById('cameraImage');
+    const cameraPlaceholder = document.getElementById('cameraPlaceholder');
+    const lineSelect = document.getElementById('line');
+    
+    // Pobierz URL kamery z rejestratora (pierwszy aktywny rejestrator)
+    // eslint-disable-next-line
+    const rejestratoryUrls = [
+        // @ts-ignore - Django template syntax
+        {% for rejestrator in rejestratory %}
+        '{{ rejestrator.url_kamery }}',
+        {% endfor %}
+    ].filter(url => url && url.trim() !== '');
+    
+    const cameraUrlFromRejestrator = rejestratoryUrls.length > 0 ? rejestratoryUrls[0] : null;
+
+    function updateCameraStream() {
+        // Używaj kamery z rejestratora (niezależnie od wyboru linii)
+        const cameraUrl = cameraUrlFromRejestrator;
+        
+        if (cameraUrl) {
+            // Dodaj timestamp do URL, aby uniknąć cache
+            const separator = cameraUrl.includes('?') ? '&' : '?';
+            const urlWithTimestamp = `${cameraUrl}${separator}timestamp=${Date.now()}`;
+            cameraImage.src = urlWithTimestamp;
+            cameraImage.style.display = 'block';
+            cameraPlaceholder.style.display = 'none';
+            cameraImage.onerror = function() {
+                cameraImage.style.display = 'none';
+                cameraPlaceholder.style.display = 'block';
+            };
+        } else {
+            cameraImage.style.display = 'none';
+            cameraPlaceholder.style.display = 'block';
+            if (cameraRefreshInterval) {
+                clearInterval(cameraRefreshInterval);
+                cameraRefreshInterval = null;
+            }
+        }
+    }
+
+    function startCameraRefresh() {
+        if (cameraRefreshInterval) {
+            clearInterval(cameraRefreshInterval);
+        }
+        updateCameraStream();
+        cameraRefreshInterval = setInterval(updateCameraStream, 1000);
+    }
+
+    function stopCameraRefresh() {
+        if (cameraRefreshInterval) {
+            clearInterval(cameraRefreshInterval);
+            cameraRefreshInterval = null;
+        }
+    }
+
+    // Funkcja do pobierania numeru zlecenia z PLC
+    async function fetchOrderNumber(lineId) {
+        const orderNumberInput = document.getElementById('orderNumber');
+        const orderNumberGroup = document.getElementById('orderNumberGroup');
+        const orderNumberError = document.getElementById('orderNumberError');
+        
+        if (!lineId) {
+            // Ukryj pole numeru zlecenia jeśli linia nie jest wybrana
+            orderNumberGroup.style.display = 'none';
+            orderNumberError.style.display = 'none';
+            return;
+        }
+
+        // Pokaż pole numeru zlecenia (zawsze gdy linia jest wybrana)
+        orderNumberGroup.style.display = 'block';
+
+        try {
+            const response = await fetch(`/api/order-number/?line_id=${lineId}`);
+            const data = await response.json();
+            
+            if (data.success && data.order_number) {
+                // Udało się pobrać - zawsze ustaw wartość przy zmianie linii
+                orderNumberInput.value = data.order_number;
+                orderNumberError.style.display = 'none';
+            } else {
+                // Nie udało się pobrać - pokaż komunikat (pole już jest widoczne)
+                orderNumberError.style.display = 'block';
+                // Ukryj komunikat po 10 sekundach
+                setTimeout(() => {
+                    orderNumberError.style.display = 'none';
+                }, 10000);
+            }
+        } catch (error) {
+            // Błąd sieci - pokaż komunikat błędu (pole już jest widoczne)
+            orderNumberError.style.display = 'block';
+            setTimeout(() => {
+                orderNumberError.style.display = 'none';
+            }, 10000);
+        }
+    }
+
+    // Inicjalizuj kamerę z rejestratora przy starcie (niezależnie od wyboru linii)
+    if (cameraUrlFromRejestrator) {
+        startCameraRefresh();
+    }
+
+    lineSelect.addEventListener('change', function() {
+        // Kamera jest przypisana do rejestratora, nie zmienia się przy zmianie linii
+        // Pobierz numer zlecenia z PLC dla wybranej linii
+        fetchOrderNumber(lineSelect.value);
+        // Zaktualizuj opcje formularza na podstawie rejestratora przypisanego do linii
+        updateFormOptions(lineSelect.value);
+    });
+    
+    // Jeśli linia jest już wybrana przy ładowaniu strony, zaktualizuj opcje i pobierz numer zlecenia
+    if (lineSelect.value) {
+        updateFormOptions(lineSelect.value);
+        fetchOrderNumber(lineSelect.value);
+    }
+
+    // Funkcja do aktualizowania opcji formularza na podstawie linii
+    async function updateFormOptions(lineId) {
+        if (!lineId) return;
+        
+        try {
+            const response = await fetch(`/api/line/${lineId}/options/`);
+            const data = await response.json();
+            
+            if (data.success) {
+                // Aktualizuj typy kontroli
+                const controlTypeSelect = document.getElementById('controlType');
+                if (controlTypeSelect && data.typy_kontroli) {
+                    controlTypeSelect.innerHTML = '<option value="">Wybierz typ kontroli</option>';
+                    data.typy_kontroli.forEach(function(typ) {
+                        const option = document.createElement('option');
+                        option.value = typ.id;
+                        option.textContent = typ.nazwa;
+                        controlTypeSelect.appendChild(option);
+                    });
+                    // Ustaw domyślną wartość z rejestratora, jeśli dostępna
+                    if (data.domyslny_typ_kontroli_id) {
+                        controlTypeSelect.value = data.domyslny_typ_kontroli_id;
+                    }
+                }
+                
+                // Aktualizuj rodzaje testu
+                const testTypeSelect = document.getElementById('testType');
+                if (testTypeSelect && data.rodzaje_testu) {
+                    testTypeSelect.innerHTML = '<option value="">Wybierz rodzaj testu</option>';
+                    data.rodzaje_testu.forEach(function(rodzaj) {
+                        const option = document.createElement('option');
+                        option.value = rodzaj.id;
+                        option.textContent = rodzaj.kod + '. ' + rodzaj.nazwa;
+                        option.setAttribute('data-full-text', rodzaj.nazwa);
+                        testTypeSelect.appendChild(option);
+                    });
+                    // Ustaw domyślną wartość z rejestratora, jeśli dostępna
+                    if (data.domyslny_rodzaj_testu_id) {
+                        testTypeSelect.value = data.domyslny_rodzaj_testu_id;
+                    }
+                    updateTestTypeDisplay();
+                }
+            }
+        } catch (error) {
+            console.error('Error updating form options:', error);
+        }
+    }
+
+    // Pobierz numer zlecenia jeśli linia jest już wybrana przy starcie
+    if (lineSelect.value) {
+        fetchOrderNumber(lineSelect.value);
+        updateFormOptions(lineSelect.value);
+    }
+
+    // Obsługa wyświetlania wieloliniowego tekstu dla rodzaju testu
+    const testTypeSelect = document.getElementById('testType');
+    const testTypeDisplay = document.getElementById('testTypeDisplay');
+    
+    function updateTestTypeDisplay() {
+        const selectedOption = testTypeSelect.options[testTypeSelect.selectedIndex];
+        if (selectedOption && selectedOption.dataset.fullText) {
+            // Podziel tekst po przecinku i wyświetl każdą część w nowej linii
+            const fullText = selectedOption.dataset.fullText;
+            // Zamień przecinki na nowe linie (pierwsza część to "5. Pokrycie denka...", reszta po przecinku)
+            const parts = fullText.split(',').map(p => p.trim());
+            const displayText = parts.join('\n');
+            testTypeDisplay.textContent = displayText;
+            testTypeDisplay.style.display = 'block';
+        } else {
+            testTypeDisplay.style.display = 'none';
+        }
+    }
+    
+    testTypeSelect.addEventListener('change', updateTestTypeDisplay);
+    
+    // Sprawdź przy starcie czy coś jest wybrane
+    updateTestTypeDisplay();
+
+    document.getElementById('measurementForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const form = e.target;
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalText = submitBtn.textContent;
+        
+        // Walidacja numeru zlecenia
+        const orderNumberGroup = document.getElementById('orderNumberGroup');
+        const orderNumberInput = document.getElementById('orderNumber');
+        
+        if (orderNumberGroup.style.display !== 'none') {
+            const orderNumber = orderNumberInput.value.trim();
+            if (!orderNumber) {
+                showErrorNotification('Numer zlecenia jest wymagany!');
+                orderNumberInput.focus();
+                orderNumberInput.style.borderColor = '#dc2626';
+                return;
+            }
+            orderNumberInput.style.borderColor = '#94a3b8';
+        }
+        
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Zapisywanie...';
+
+        const formData = new URLSearchParams();
+        formData.append('line', document.getElementById('line').value);
+        formData.append('controlType', document.getElementById('controlType').value);
+        formData.append('testType', document.getElementById('testType').value);
+        formData.append('comment', document.getElementById('comment').value);
+        const orderNumber = document.getElementById('orderNumber').value.trim();
+        if (orderNumber) {
+            formData.append('orderNumber', orderNumber);
+        } else {
+            // Jeśli pole jest widoczne ale puste, to błąd (powinno być już sprawdzone wyżej, ale na wszelki wypadek)
+            if (orderNumberGroup.style.display !== 'none') {
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+                showErrorNotification('Numer zlecenia jest wymagany!');
+                return;
+            }
+        }
+        
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
+        if (!csrfToken) {
+            showErrorNotification('Błąd: Brak tokenu CSRF');
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/measurement/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': csrfToken.value
+                },
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                showSuccessNotification('Pomiar został zarejestrowany pomyślnie!');
+                form.reset();
+                // Ukryj pole numeru zlecenia po resetowaniu formularza
+                const orderNumberGroup = document.getElementById('orderNumberGroup');
+                const orderNumberError = document.getElementById('orderNumberError');
+                if (orderNumberGroup) orderNumberGroup.style.display = 'none';
+                if (orderNumberError) orderNumberError.style.display = 'none';
+                // Ukryj również wyświetlanie typu testu
+                const testTypeDisplay = document.getElementById('testTypeDisplay');
+                if (testTypeDisplay) testTypeDisplay.style.display = 'none';
+                if (data.record) {
+                    updateLastRecord(data.record);
+                }
+            } else {
+                showErrorNotification(data.message || 'Nie udało się zapisać pomiaru');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showErrorNotification('Błąd połączenia z serwerem');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
+        }
+    });
+
+    function updateLastRecord(record) {
+        const container = document.getElementById('lastRecordContainer');
+        if (!container) return;
+
+        let wrapper = container.querySelector('.last-record-wrapper');
+        
+        // Jeśli nie ma wrappera lub jest pusty stan, utwórz nową strukturę
+        if (!wrapper || wrapper.querySelector('div[style*="Brak zapisów"]')) {
+            container.innerHTML = '';
+            wrapper = document.createElement('div');
+            wrapper.className = 'last-record-wrapper';
+            container.appendChild(wrapper);
+        }
+
+        // Aktualizuj/pobierz thumbnail
+        let thumbnail = wrapper.querySelector('.last-record-thumbnail') || document.getElementById('lastRecordThumbnail');
+        if (!thumbnail) {
+            thumbnail = document.createElement('div');
+            thumbnail.className = 'last-record-thumbnail';
+            thumbnail.id = 'lastRecordThumbnail';
+            wrapper.insertBefore(thumbnail, wrapper.firstChild);
+        }
+
+        // Aktualizuj zdjęcie w thumbnailu
+        thumbnail.innerHTML = '';
+        if (record.zdjecie_url) {
+            const img = document.createElement('img');
+            img.id = 'lastRecordImage';
+            img.src = record.zdjecie_url;
+            img.alt = 'Ostatni pomiar';
+            img.style.cssText = 'width: 100%; height: 100%; object-fit: contain;';
+            thumbnail.appendChild(img);
+            thumbnail.setAttribute('onclick', `showImageModal('${record.zdjecie_url}')`);
+        } else {
+            const placeholder = document.createElement('div');
+            placeholder.id = 'lastRecordImagePlaceholder';
+            placeholder.className = 'last-record-thumbnail-placeholder';
+            placeholder.textContent = 'Brak zdjęcia';
+            thumbnail.appendChild(placeholder);
+            thumbnail.removeAttribute('onclick');
+        }
+
+        // Aktualizuj/pobierz sekcję z informacjami
+        let infoDiv = wrapper.querySelector('.last-record-info') || document.getElementById('lastRecordInfo');
+        if (!infoDiv) {
+            infoDiv = document.createElement('div');
+            infoDiv.className = 'last-record-info';
+            infoDiv.id = 'lastRecordInfo';
+            wrapper.appendChild(infoDiv);
+        }
+
+        // Aktualizuj zawartość informacji
+        const zlecenieHTML = record.numer_zlecenia 
+            ? `<div class="info-item" id="lastRecordZlecenieContainer">
+                <span class="info-label">Zlecenie:</span>
+                <span class="info-value" id="lastRecordZlecenie">${record.numer_zlecenia}</span>
+               </div>`
+            : `<div class="info-item" id="lastRecordZlecenieContainer" style="display: none;">
+                <span class="info-label">Zlecenie:</span>
+                <span class="info-value" id="lastRecordZlecenie"></span>
+               </div>`;
+
+        const komentarzHTML = record.komentarz
+            ? `<div class="info-item" id="lastRecordKomentarzContainer">
+                <span class="info-label">Komentarz:</span>
+                <span class="info-value" id="lastRecordKomentarz">${record.komentarz}</span>
+               </div>`
+            : `<div class="info-item" id="lastRecordKomentarzContainer" style="display: none;">
+                <span class="info-label">Komentarz:</span>
+                <span class="info-value" id="lastRecordKomentarz"></span>
+               </div>`;
+
+        infoDiv.innerHTML = `
+            <h3>Szczegóły pomiaru</h3>
+            <div class="info-item">
+                <span class="info-label">Data:</span>
+                <span class="info-value" id="lastRecordData">${record.data || ''}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Linia:</span>
+                <span class="info-value" id="lastRecordLinia">${record.linia || ''}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Typ kontroli:</span>
+                <span class="info-value" id="lastRecordTypKontroli">${record.typ_kontroli || ''}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Rodzaj testu:</span>
+                <span class="info-value" id="lastRecordRodzajTestu">${record.rodzaj_testu || ''}</span>
+            </div>
+            ${zlecenieHTML}
+            ${komentarzHTML}
+        `;
+    }
+
+    // Funkcje powiadomień są teraz zdefiniowane w base.html
+
+    function showImageModal(imageUrl) {
+        if (!imageUrl) return;
+        const modal = document.getElementById('imageModal');
+        const img = document.getElementById('modalImage');
+        img.src = imageUrl;
+        img.classList.remove('zoomed');
+        img.style.transform = '';
+        img.dataset.tx = '0';
+        img.dataset.ty = '0';
+        modal.classList.add('active');
+    }
+
+    function closeImageModal() {
+        const modal = document.getElementById('imageModal');
+        const img = document.getElementById('modalImage');
+        modal.classList.remove('active');
+        img.classList.remove('zoomed');
+        img.style.transform = '';
+        img.dataset.tx = '0';
+        img.dataset.ty = '0';
+    }
+
+    function setImageTransform(img) {
+        const tx = Number(img.dataset.tx || 0);
+        const ty = Number(img.dataset.ty || 0);
+        const zoom = img.classList.contains('zoomed') ? 3 : 1;
+        img.style.transform = `translate(${tx}px, ${ty}px) scale(${zoom})`;
+    }
+
+    function toggleZoom() {
+        const img = document.getElementById('modalImage');
+        const nextZoomed = !img.classList.contains('zoomed');
+        img.classList.toggle('zoomed', nextZoomed);
+        img.dataset.tx = '0';
+        img.dataset.ty = '0';
+        setImageTransform(img);
+    }
+
+    (function attachModalPanZoom() {
+        const img = document.getElementById('modalImage');
+        if (!img) return;
+
+        // Zoom tylko na dwuklik
+        img.addEventListener('dblclick', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleZoom();
+        });
+
+        let dragging = false;
+        let startX = 0;
+        let startY = 0;
+        let originTx = 0;
+        let originTy = 0;
+
+        function startDrag(clientX, clientY) {
+            if (!img.classList.contains('zoomed')) return;
+            dragging = true;
+            startX = clientX;
+            startY = clientY;
+            originTx = Number(img.dataset.tx || 0);
+            originTy = Number(img.dataset.ty || 0);
+        }
+
+        function moveDrag(clientX, clientY) {
+            if (!dragging) return;
+            img.dataset.tx = String(originTx + (clientX - startX));
+            img.dataset.ty = String(originTy + (clientY - startY));
+            setImageTransform(img);
+        }
+
+        function endDrag() {
+            dragging = false;
+        }
+
+        img.addEventListener('mousedown', (e) => {
+            if (e.button !== 0) return;
+            e.preventDefault();
+            startDrag(e.clientX, e.clientY);
+        });
+        window.addEventListener('mousemove', (e) => moveDrag(e.clientX, e.clientY));
+        window.addEventListener('mouseup', endDrag);
+
+        // Touch
+        img.addEventListener('touchstart', (e) => {
+            if (!img.classList.contains('zoomed')) return;
+            const t = e.touches[0];
+            if (!t) return;
+            startDrag(t.clientX, t.clientY);
+        }, { passive: true });
+        img.addEventListener('touchmove', (e) => {
+            if (!dragging) return;
+            const t = e.touches[0];
+            if (!t) return;
+            moveDrag(t.clientX, t.clientY);
+        }, { passive: true });
+        img.addEventListener('touchend', endDrag);
+    })();
+
+    const imageModal = document.getElementById('imageModal');
+    if (imageModal) {
+        imageModal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeImageModal();
+            }
+        });
+    }
+</script>
+{% endblock %}

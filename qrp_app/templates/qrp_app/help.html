@@ -1,0 +1,58 @@
+{% extends 'qrp_app/base.html' %}
+
+
+{% block content %}
+<div class="container">
+    <div style="background: white; border-radius: 1rem; padding: 2rem; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); max-width: 800px; margin: 0 auto;">
+        <h2 style="font-size: 1.5rem; font-weight: 900; color: #1e293b; margin-bottom: 1.5rem; padding-bottom: 0.75rem; border-bottom: 2px solid #e2e8f0;">Centrum Pomocy</h2>
+        
+        <div style="text-align: center; padding: 2rem;">
+            <h3 style="font-size: 1.25rem; color: #1e293b; margin-bottom: 1rem;">Witaj w systemie QRP QC Platform!</h3>
+            <p style="margin: 1rem 0; color: #64748b; line-height: 1.6;">
+                System służy do rejestracji pomiarów kontroli jakości oraz wad produkcyjnych.
+            </p>
+            
+            <div style="background: #eff6ff; padding: 1.5rem; border-radius: 12px; margin-top: 2rem; margin-bottom: 2rem;">
+                <h4 style="color: #1e3a8a; margin-bottom: 1rem;">Interaktywna nauka</h4>
+                <p style="color: #1e3a8a; margin-bottom: 1rem; font-size: 0.875rem;">
+                    Przejdź przez samouczek krok po kroku, aby nauczyć się korzystania z formularzy:
+                </p>
+                <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                    <a href="{% url 'qrp_app:measurement' %}?tour=true" style="background: linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%); color: white; padding: 0.75rem 1.5rem; border-radius: 0.5rem; text-decoration: none; font-weight: 600; transition: transform 0.2s; display: inline-block;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                        📊 Samouczek: Rejestracja Pomiarów
+                    </a>
+                    <a href="{% url 'qrp_app:defect' %}?tour=true" style="background: linear-gradient(90deg, #dc2626 0%, #ef4444 100%); color: white; padding: 0.75rem 1.5rem; border-radius: 0.5rem; text-decoration: none; font-weight: 600; transition: transform 0.2s; display: inline-block;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                        ⚠️ Samouczek: Rejestracja Wad
+                    </a>
+                </div>
+            </div>
+
+            <div style="margin-top: 2rem; text-align: left;">
+                <h4 style="color: #1e293b; margin-bottom: 1rem;">Funkcje systemu:</h4>
+                <ul style="color: #64748b; line-height: 2;">
+                    <li>Rejestracja pomiarów kontroli jakości</li>
+                    <li>Rejestracja wad produkcyjnych</li>
+                    <li>Przeglądanie archiwum zapisów z zaawansowanymi filtrami</li>
+                </ul>
+            </div>
+
+            <div style="margin-top: 2rem; text-align: left;">
+                <h4 style="color: #1e293b; margin-bottom: 1rem;">Nawigacja:</h4>
+                <ul style="color: #64748b; line-height: 2;">
+                    <li><strong>Rejestracja Pomiarów</strong> - Rejestrowanie pomiarów kontroli jakości</li>
+                    <li><strong>Rejestracja Wad</strong> - Rejestrowanie wad produkcyjnych</li>
+                    <li><strong>Archiwum</strong> - Przeglądanie wszystkich zapisów z filtrowaniem i wyszukiwaniem</li>
+                </ul>
+            </div>
+
+            <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #e2e8f0;">
+                <p style="color: #64748b; font-size: 0.875rem;">
+                    W razie pytań skontaktuj się z administratorem systemu.
+                    <br>
+                    <a href="mailto:radoslaw.tota@canpack.com" style="color: #4f46e5; text-decoration: none; font-weight: 600;">radoslaw.tota@canpack.com</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

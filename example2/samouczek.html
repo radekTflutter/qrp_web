@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QRP - System Pomocy</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 50%, #e2e8f0 100%);
+            min-height: 100vh;
+        }
+
+        /* Navbar */
+        .navbar {
+            background: #1e293b;
+            border-bottom: 1px solid #334155;
+            padding: 1rem 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navbar-left {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .navbar h1 {
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: white;
+        }
+
+        .navbar-brand span {
+            color: #cbd5e1;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .nav-link {
+            color: #cbd5e1;
+            text-decoration: none;
+            padding: 0.625rem 1.25rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .nav-link.active {
+            background: linear-gradient(135deg, #06b6d4 0%, #2563eb 100%);
+            color: white;
+        }
+
+        .navbar-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-name {
+            color: #cbd5e1;
+            font-size: 0.875rem;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #06b6d4 0%, #2563eb 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1rem;
+        }
+
+        /* Main Container */
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 2fr 1fr;
+            gap: 1.5rem;
+            padding: 1.5rem;
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+
+        .panel {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            border: 1px solid #cbd5e1;
+        }
+
+        .panel h2 {
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: #1e293b;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-group label {
+            display: block;
+            color: #334155;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            background: #f1f5f9;
+            border: 2px solid #94a3b8;
+            border-radius: 0.5rem;
+            color: #0f172a;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .info-display {
+            background: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            padding: 0.75rem 1rem;
+            margin-bottom: 1rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .btn-register {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            border: none;
+            border-radius: 0.75rem;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+
+        .camera-container {
+            background: #000;
+            border-radius: 0.75rem;
+            aspect-ratio: 16/9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #64748b;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Tutorial Overlay */
+        .tutorial-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 9998;
+            display: none;
+        }
+
+        .tutorial-overlay.active {
+            display: block;
+        }
+
+        /* Tutorial Spotlight */
+        .tutorial-spotlight {
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            transition: all 0.5s ease;
+        }
+
+        /* Tutorial Step Box */
+        .tutorial-step {
+            position: fixed;
+            background: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+            max-width: 420px;
+            z-index: 10000;
+            transition: all 0.5s ease;
+        }
+
+        .tutorial-step-number {
+            position: absolute;
+            top: -16px;
+            left: 2rem;
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #06b6d4 0%, #2563eb 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 900;
+            font-size: 1.125rem;
+            box-shadow: 0 4px 12px rgba(6, 182, 212, 0.4);
+        }
+
+        .tutorial-step h3 {
+            color: #1e293b;
+            font-size: 1.5rem;
+            font-weight: 900;
+            margin-bottom: 1rem;
+        }
+
+        .tutorial-step p {
+            color: #64748b;
+            font-size: 1rem;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        .tutorial-step-hint {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .tutorial-step-hint p {
+            color: #92400e;
+            font-size: 0.875rem;
+            margin: 0;
+            font-weight: 600;
+        }
+
+        .tutorial-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: space-between;
+        }
+
+        .tutorial-btn {
+            flex: 1;
+            padding: 0.875rem 1.5rem;
+            border-radius: 0.75rem;
+            border: none;
+            font-weight: 700;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .tutorial-btn-primary {
+            background: linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+        }
+
+        .tutorial-btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(79, 70, 229, 0.4);
+        }
+
+        .tutorial-btn-secondary {
+            background: #f1f5f9;
+            color: #334155;
+        }
+
+        .tutorial-btn-secondary:hover {
+            background: #e2e8f0;
+        }
+
+        .tutorial-btn-skip {
+            background: transparent;
+            color: #64748b;
+            border: 2px solid #e2e8f0;
+        }
+
+        .tutorial-btn-skip:hover {
+            border-color: #cbd5e1;
+        }
+
+        .tutorial-progress {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            justify-content: center;
+        }
+
+        .progress-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            transition: all 0.3s;
+        }
+
+        .progress-dot.active {
+            background: linear-gradient(135deg, #06b6d4 0%, #2563eb 100%);
+            width: 24px;
+            border-radius: 4px;
+        }
+
+        /* Arrow Pointer */
+        .tutorial-arrow {
+            position: fixed;
+            width: 60px;
+            height: 60px;
+            z-index: 10001;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .tutorial-arrow svg {
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3));
+        }
+
+        /* Welcome Screen */
+        .tutorial-welcome {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 1.5rem;
+            padding: 3rem;
+            max-width: 600px;
+            text-align: center;
+            z-index: 10000;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4);
+        }
+
+        .tutorial-welcome-icon {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, #06b6d4 0%, #2563eb 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 2rem;
+            box-shadow: 0 10px 30px rgba(6, 182, 212, 0.3);
+        }
+
+        .tutorial-welcome-icon svg {
+            width: 50px;
+            height: 50px;
+            color: white;
+        }
+
+        .tutorial-welcome h2 {
+            font-size: 2rem;
+            font-weight: 900;
+            color: #1e293b;
+            margin-bottom: 1rem;
+        }
+
+        .tutorial-welcome p {
+            font-size: 1.125rem;
+            color: #64748b;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+        }
+
+        .tutorial-welcome-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        /* Highlight Effect */
+        .tutorial-highlight {
+            position: relative;
+            z-index: 9999 !important;
+            box-shadow: 0 0 0 4px #06b6d4, 0 0 0 9999px rgba(0, 0, 0, 0.85) !important;
+            border-radius: 0.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .tutorial-step {
+                max-width: 90%;
+                padding: 1.5rem;
+            }
+
+            .tutorial-welcome {
+                max-width: 90%;
+                padding: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <div class="navbar">
+        <div class="navbar-left">
+            <div class="navbar-brand">
+                <h1>QRP</h1>
+                <span>Control System</span>
+            </div>
+            
+            <nav class="nav-menu">
+                <a href="#" class="nav-link active">Rejestracja Pomiarów</a>
+                <a href="#" class="nav-link">Rejestracja Wad</a>
+                <a href="#" class="nav-link">Archiwum</a>
+                <a href="#" class="nav-link" onclick="startTutorial()">Pomoc</a>
+            </nav>
+        </div>
+
+        <div class="navbar-right">
+            <span class="user-name">Jan Kowalski</span>
+            <div class="user-avatar">JK</div>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container">
+        <div class="panel">
+            <h2>Rejestracja Pomiaru</h2>
+            
+            <form id="measurementForm">
+                <div class="form-group" id="step-line">
+                    <label for="line">Wybór linii</label>
+                    <select id="line">
+                        <option value="">Wybierz linię...</option>
+                        <option value="Linia 2">Linia 2</option>
+                        <option value="Linia 3">Linia 3</option>
+                    </select>
+                </div>
+
+                <div id="orderDisplay" class="info-display hidden">
+                    <strong>Numer zlecenia:</strong> <span id="orderNumber">-</span>
+                </div>
+
+                <div class="form-group" id="step-control">
+                    <label for="controlType">Typ kontroli</label>
+                    <select id="controlType">
+                        <option value="Standardowe" selected>Standardowe</option>
+                        <option value="Ponowna kontrola">Ponowna kontrola</option>
+                        <option value="Testowe">Testowe</option>
+                        <option value="Walidacja procesu">Walidacja procesu</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="step-test">
+                    <label for="testType">Rodzaj testu</label>
+                    <select id="testType">
+                        <option value="">Wybierz rodzaj testu...</option>
+                        <option value="1">1. Pokrycie lakierem - CuSO4</option>
+                        <option value="2">2. Pokrycie denka - CuSO4</option>
+                        <option value="3">3. Ilość oleju (talk)</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="step-comment">
+                    <label for="comment">Komentarz (opcjonalnie)</label>
+                    <textarea id="comment" placeholder="Dodaj uwagi..."></textarea>
+                </div>
+
+                <button type="button" class="btn-register" id="step-submit">
+                    Zarejestruj pomiar
+                </button>
+            </form>
+        </div>
+
+        <div class="panel">
+            <h2>Podgląd z Kamery</h2>
+            <div class="camera-container">
+                <p>🎥 Live Camera Stream</p>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h2>Ostatni Zapis</h2>
+            <p style="color: #64748b; text-align: center; padding: 2rem;">Brak danych</p>
+        </div>
+    </div>
+
+    <!-- Tutorial Overlay -->
+    <div class="tutorial-overlay" id="tutorialOverlay"></div>
+
+    <!-- Tutorial Arrow -->
+    <div class="tutorial-arrow hidden" id="tutorialArrow">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="#06b6d4" stroke-width="3">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+        </svg>
+    </div>
+
+    <script>
+        const tutorialSteps = [
+            {
+                element: '#step-line',
+                title: 'Wybór linii produkcyjnej',
+                text: 'Rozpocznij od wyboru linii, na której wykonujesz pomiar. Kliknij na listę rozwijaną i wybierz swoją linię.',
+                hint: '💡 Po wyborze linii automatycznie pojawi się numer aktualnego zlecenia.',
+                position: 'right'
+            },
+            {
+                element: '#step-control',
+                title: 'Typ kontroli',
+                text: 'Określ rodzaj kontroli jakości. Domyślnie ustawione jest "Standardowe" - najczęściej używana opcja.',
+                hint: '💡 Wybierz "Ponowna kontrola" tylko jeśli wcześniejszy pomiar był niezgodny.',
+                position: 'right'
+            },
+            {
+                element: '#step-test',
+                title: 'Rodzaj testu',
+                text: 'Wybierz konkretny test, który chcesz przeprowadzić. Każdy test ma swój numer i opis procedury.',
+                hint: '💡 Upewnij się, że wybrany test odpowiada bieżącemu zleceniu produkcyjnemu.',
+                position: 'right'
+            },
+            {
+                element: '#step-comment',
+                title: 'Komentarz (opcjonalnie)',
+                text: 'Możesz dodać dodatkowe uwagi lub szczegóły dotyczące pomiaru. To pole jest opcjonalne, ale przydatne przy nietypowych sytuacjach.',
+                hint: '💡 Opisz dokładnie wszelkie odstępstwa od normy.',
+                position: 'right'
+            },
+            {
+                element: '#step-submit',
+                title: 'Rejestracja pomiaru',
+                text: 'Po wypełnieniu wszystkich wymaganych pól, kliknij ten przycisk aby zapisać pomiar. Zostanie automatycznie zrobione zdjęcie z kamery.',
+                hint: '✅ Sprawdź wszystkie dane przed zatwierdzeniem!',
+                position: 'top'
+            }
+        ];
+
+        let currentStep = 0;
+        let tutorialActive = false;
+
+        function startTutorial() {
+            tutorialActive = true;
+            showWelcomeScreen();
+        }
+
+        function showWelcomeScreen() {
+            const overlay = document.getElementById('tutorialOverlay');
+            overlay.classList.add('active');
+            
+            const welcome = document.createElement('div');
+            welcome.className = 'tutorial-welcome';
+            welcome.innerHTML = `
+                <div class="tutorial-welcome-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                    </svg>
+                </div>
+                <h2>Witaj w systemie QRP!</h2>
+                <p>Poprowadzimy Cię krok po kroku przez proces rejestracji pomiaru. Samouczek zajmie około 2 minut.</p>
+                <div class="tutorial-welcome-buttons">
+                    <button class="tutorial-btn tutorial-btn-skip" onclick="skipTutorial()">Pomiń</button>
+                    <button class="tutorial-btn tutorial-btn-primary" onclick="beginTutorial()">Rozpocznij samouczek</button>
+                </div>
+            `;
+            
+            document.body.appendChild(welcome);
+        }
+
+        function beginTutorial() {
+            document.querySelector('.tutorial-welcome').remove();
+            currentStep = 0;
+            showStep(currentStep);
+        }
+
+        function showStep(stepIndex) {
+            const step = tutorialSteps[stepIndex];
+            const element = document.querySelector(step.element);
+            
+            if (!element) return;
+
+            // Highlight element
+            element.classList.add('tutorial-highlight');
+            
+            // Position step box
+            const rect = element.getBoundingClientRect();
+            const stepBox = createStepBox(step, stepIndex);
+            
+            // Position based on step.position
+            if (step.position === 'right') {
+                stepBox.style.left = (rect.right + 30) + 'px';
+                stepBox.style.top = rect.top + 'px';
+            } else if (step.position === 'top') {
+                stepBox.style.left = rect.left + 'px';
+                stepBox.style.bottom = (window.innerHeight - rect.top + 20) + 'px';
+            }
+            
+            // Show arrow
+            const arrow = document.getElementById('tutorialArrow');
+            arrow.classList.remove('hidden');
+            arrow.style.left = (rect.left - 70) + 'px';
+            arrow.style.top = (rect.top + 20) + 'px';
+            
+            document.body.appendChild(stepBox);
+        }
+
+        function createStepBox(step, index) {
+            const box = document.createElement('div');
+            box.className = 'tutorial-step';
+            box.id = 'currentStepBox';
+            
+            const progressDots = tutorialSteps.map((_, i) => 
+                `<div class="progress-dot ${i === index ? 'active' : ''}"></div>`
+            ).join('');
+            
+            box.innerHTML = `
+                <div class="tutorial-step-number">${index + 1}</div>
+                <h3>${step.title}</h3>
+                <p>${step.text}</p>
+                ${step.hint ? `<div class="tutorial-step-hint"><p>${step.hint}</p></div>` : ''}
+                <div class="tutorial-buttons">
+                    ${index > 0 ? '<button class="tutorial-btn tutorial-btn-secondary" onclick="previousStep()">Wstecz</button>' : '<button class="tutorial-btn tutorial-btn-skip" onclick="skipTutorial()">Pomiń</button>'}
+                    <button class="tutorial-btn tutorial-btn-primary" onclick="${index < tutorialSteps.length - 1 ? 'nextStep()' : 'completeTutorial()'}">
+                        ${index < tutorialSteps.length - 1 ? 'Dalej' : 'Zakończ'}
+                    </button>
+                </div>
+                <div class="tutorial-progress">
+                    ${progressDots}
+                </div>
+            `;
+            
+            return box;
+        }
+
+        function nextStep() {
+            clearStep();
+            currentStep++;
+            if (currentStep < tutorialSteps.length) {
+                showStep(currentStep);
+            }
+        }
+
+        function previousStep() {
+            clearStep();
+            currentStep--;
+            if (currentStep >= 0) {
+                showStep(currentStep);
+            }
+        }
+
+        function clearStep() {
+            const stepBox = document.getElementById('currentStepBox');
+            if (stepBox) stepBox.remove();
+            
+            document.querySelectorAll('.tutorial-highlight').forEach(el => {
+                el.classList.remove('tutorial-highlight');
+            });
+            
+            document.getElementById('tutorialArrow').classList.add('hidden');
+        }
+
+        function completeTutorial() {
+            clearStep();
+            document.getElementById('tutorialOverlay').classList.remove('active');
+            tutorialActive = false;
+            
+            alert('🎉 Gratulacje! Ukończyłeś samouczek.\n\nTeraz możesz samodzielnie rejestrować pomiary w systemie QRP.');
+        }
+
+        function skipTutorial() {
+            const welcome = document.querySelector('.tutorial-welcome');
+            if (welcome) welcome.remove();
+            
+            clearStep();
+            document.getElementById('tutorialOverlay').classList.remove('active');
+            tutorialActive = false;
+        }
+
+        // Auto-start tutorial on load (for demo)
+        setTimeout(() => {
+            startTutorial();
+        }, 1000);
+    </script>
+</body>
+</html>

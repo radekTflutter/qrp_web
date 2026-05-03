@@ -1,0 +1,32 @@
+{% extends "measurement_register.html" %}
+
+{% block content %}
+<style> .main-container { display: block; max-width: 800px; margin: 80px auto; } </style>
+
+<div class="main-container">
+    <div class="panel">
+        <h2 class="panel-title">Centrum Pomocy</h2>
+        <div style="text-align: center; padding: 2rem;">
+            <h3>Witaj w systemie QRP Control!</h3>
+            <p style="margin: 1rem 0; color: #64748b;">
+                System służy do rejestracji pomiarów kontroli jakości z integracją PLC i kamer.
+            </p>
+            
+            <div style="background: #eff6ff; padding: 1.5rem; border-radius: 12px; margin-top: 2rem;">
+                <h4 style="color: #1e3a8a; margin-bottom: 1rem;">Nie wiesz jak zacząć?</h4>
+                <a href="{% url 'qrp:measurement_page' %}?tour=true" class="btn-submit" style="display: inline-block; width: auto; text-decoration: none;">
+                    URUCHOM SAMOUCZEK KROK PO KROKU
+                </a>
+            </div>
+
+            <div style="margin-top: 2rem; text-align: left;">
+                <h4>Skróty klawiszowe:</h4>
+                <ul>
+                    <li><strong>Enter</strong> - Zapisz pomiar</li>
+                    <li><strong>F5</strong> - Odśwież widok</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

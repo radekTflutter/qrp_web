@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QRP - Archiwum</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 50%, #e2e8f0 100%);
+            min-height: 100vh;
+        }
+
+        /* Navbar */
+        .navbar {
+            background: #1e293b;
+            border-bottom: 1px solid #334155;
+            padding: 1rem 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navbar-left {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .navbar h1 {
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: white;
+        }
+
+        .navbar-brand span {
+            color: #cbd5e1;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .nav-link {
+            color: #cbd5e1;
+            text-decoration: none;
+            padding: 0.625rem 1.25rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .nav-link.active {
+            background: linear-gradient(135deg, #06b6d4 0%, #2563eb 100%);
+            color: white;
+        }
+
+        .navbar-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-name {
+            color: #cbd5e1;
+            font-size: 0.875rem;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #06b6d4 0%, #2563eb 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .user-avatar:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(6, 182, 212, 0.4);
+        }
+
+        /* Main Container */
+        .container {
+            padding: 1.5rem;
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .page-header h1 {
+            font-size: 2rem;
+            font-weight: 900;
+            color: #1e293b;
+        }
+
+        .stats {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: #4f46e5;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-top: 0.25rem;
+        }
+
+        /* Filters Panel */
+        .filters-panel {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .filters-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .filters-header h2 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .filter-toggle {
+            background: #f1f5f9;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #334155;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .filter-toggle:hover {
+            background: #e2e8f0;
+        }
+
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .filter-group label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .filter-group input,
+        .filter-group select {
+            padding: 0.625rem 0.875rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            transition: all 0.3s;
+        }
+
+        .filter-group input:focus,
+        .filter-group select:focus {
+            outline: none;
+            border-color: #4f46e5;
+        }
+
+        .filter-actions {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: flex-end;
+        }
+
+        .btn {
+            padding: 0.625rem 1.25rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+        }
+
+        .btn-secondary {
+            background: #f1f5f9;
+            color: #334155;
+        }
+
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+
+        .btn-export {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-export:hover {
+            background: #059669;
+            transform: translateY(-2px);
+        }
+
+        /* Results Panel */
+        .results-panel {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .results-info {
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        .results-info strong {
+            color: #1e293b;
+            font-weight: 700;
+        }
+
+        /* Table */
+        .table-container {
+            overflow-x: auto;
+            border-radius: 0.75rem;
+            border: 1px solid #e2e8f0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: #f8fafc;
+        }
+
+        th {
+            padding: 1rem;
+            text-align: left;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid #f1f5f9;
+            transition: all 0.2s;
+        }
+
+        tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        td {
+            padding: 1rem;
+            font-size: 0.875rem;
+            color: #334155;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge-measurement {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .badge-defect {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .badge-standard {
+            background: #f0fdf4;
+            color: #166534;
+        }
+
+        .badge-recheck {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .action-btn {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 0.375rem;
+            border-radius: 0.375rem;
+            transition: all 0.2s;
+            color: #64748b;
+        }
+
+        .action-btn:hover {
+            background: #f1f5f9;
+            color: #334155;
+        }
+
+        .action-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .page-btn {
+            padding: 0.5rem 0.875rem;
+            border: 1px solid #e2e8f0;
+            background: white;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #334155;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .page-btn:hover {
+            border-color: #4f46e5;
+            color: #4f46e5;
+        }
+
+        .page-btn.active {
+            background: linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            border-color: transparent;
+        }
+
+        .page-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .nav-menu {
+                display: none;
+            }
+
+            .filters-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .page-header {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: flex-start;
+            }
+
+            .table-container {
+                font-size: 0.75rem;
+            }
+
+            th, td {
+                padding: 0.75rem 0.5rem;
+            }
+        }
+
+        @media (max-height: 700px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .filters-panel,
+            .results-panel {
+                padding: 1rem;
+            }
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #94a3b8;
+        }
+
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            font-size: 1.125rem;
+            color: #64748b;
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-state p {
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <div class="navbar">
+        <div class="navbar-left">
+            <div class="navbar-brand">
+                <h1>QRP</h1>
+                <span>Control System</span>
+            </div>
+            
+            <nav class="nav-menu">
+                <a href="#" class="nav-link">Rejestracja Pomiarów</a>
+                <a href="#" class="nav-link">Rejestracja Wad</a>
+                <a href="#" class="nav-link active">Archiwum</a>
+                <a href="#" class="nav-link">Pomoc</a>
+            </nav>
+        </div>
+
+        <div class="navbar-right">
+            <span class="user-name">Jan Kowalski</span>
+            <div class="user-avatar">JK</div>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container">
+        
+        <!-- Page Header with Stats -->
+        <div class="page-header">
+            <h1>Archiwum Zapisów</h1>
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-value">1,247</div>
+                    <div class="stat-label">Łącznie</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">1,089</div>
+                    <div class="stat-label">Pomiary</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">158</div>
+                    <div class="stat-label">Wady</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters Panel -->
+        <div class="filters-panel">
+            <div class="filters-header">
+                <h2>🔍 Filtry wyszukiwania</h2>
+                <button class="filter-toggle" onclick="toggleFilters()">
+                    <span id="filterToggleText">Zwiń</span> ▼
+                </button>
+            </div>
+
+            <div id="filtersContent">
+                <div class="filters-grid">
+                    <div class="filter-group">
+                        <label>Typ zapisu</label>
+                        <select id="filterType">
+                            <option value="">Wszystkie</option>
+                            <option value="measurement">Pomiary</option>
+                            <option value="defect">Wady</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Linia</label>
+                        <select id="filterLine">
+                            <option value="">Wszystkie</option>
+                            <option value="Linia 2">Linia 2</option>
+                            <option value="Linia 3">Linia 3</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Typ kontroli</label>
+                        <select id="filterControl">
+                            <option value="">Wszystkie</option>
+                            <option value="Standardowe">Standardowe</option>
+                            <option value="Ponowna kontrola">Ponowna kontrola</option>
+                            <option value="Testowe">Testowe</option>
+                            <option value="Walidacja procesu">Walidacja procesu</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Operator</label>
+                        <select id="filterOperator">
+                            <option value="">Wszyscy</option>
+                            <option value="Jan Kowalski">Jan Kowalski</option>
+                            <option value="Anna Nowak">Anna Nowak</option>
+                            <option value="Piotr Wiśniewski">Piotr Wiśniewski</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Data od</label>
+                        <input type="date" id="filterDateFrom" value="2024-12-01">
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Data do</label>
+                        <input type="date" id="filterDateTo" value="2024-12-30">
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Numer zlecenia</label>
+                        <input type="text" id="filterOrder" placeholder="np. ZL-2024-001">
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Wyszukaj w opisie</label>
+                        <input type="text" id="filterSearch" placeholder="Wpisz tekst...">
+                    </div>
+                </div>
+
+                <div class="filter-actions">
+                    <button class="btn btn-secondary" onclick="resetFilters()">Wyczyść filtry</button>
+                    <button class="btn btn-primary" onclick="applyFilters()">Zastosuj filtry</button>
+                    <button class="btn btn-export" onclick="exportData()">📥 Eksport CSV</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Panel -->
+        <div class="results-panel">
+            <div class="results-header">
+                <div class="results-info">
+                    Znaleziono <strong id="resultsCount">15</strong> wyników
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Typ</th>
+                            <th>Data</th>
+                            <th>Linia</th>
+                            <th>Zlecenie</th>
+                            <th>Typ kontroli</th>
+                            <th>Opis/Test</th>
+                            <th>Operator</th>
+                            <th>Akcje</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultsTable">
+                        <tr>
+                            <td>#1247</td>
+                            <td><span class="badge badge-measurement">Pomiar</span></td>
+                            <td>30.12.2024 14:32</td>
+                            <td>Linia 2</td>
+                            <td>ZL-2024-001</td>
+                            <td><span class="badge badge-standard">Standardowe</span></td>
+                            <td>1. Pokrycie lakierem - CuSO4</td>
+                            <td>Jan Kowalski</td>
+                            <td>
+                                <button class="action-btn" title="Podgląd" onclick="viewRecord(1247)">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                    </svg>
+                                </button>
+                                <button class="action-btn" title="Pobierz zdjęcie" onclick="downloadImage(1247)">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>#1246</td>
+                            <td><span class="badge badge-defect">Wada</span></td>
+                            <td>30.12.2024 13:18</td>
+                            <td>Linia 3</td>
+                            <td>ZL-2024-003</td>
+                            <td><span class="badge badge-standard">Standardowe</span></td>
+                            <td>Rysy na powierzchni pobocznicy...</td>
+                            <td>Anna Nowak</td>
+                            <td>
+                                <button class="action-btn" title="Podgląd" onclick="viewRecord(1246)">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                    </svg>
+                                </button>
+                                <button class="action-btn" title="Pobierz zdjęcie" onclick="downloadImage(1246)">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>#1245</td>
+                            <td><span class="badge badge-measurement">Pomiar</span></td>
+                            <td>30.12.2024 12:05</td>
+                            <td>Linia 2</td>
+                            <td>ZL-2024-001</td>
+                            <td><span class="badge badge-recheck">Ponowna kontrola</span></td>
+                            <td>3. Ilość oleju (talk)</td>
+                            <td>Piotr Wiśniewski</td>
+                            <td>
+                                <button class="action-btn" title="Podgląd" onclick="viewRecord(1245)">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                    </svg>
+                                </button>
+                                <button class="action-btn" title="Pobierz zdjęcie" onclick="downloadImage(1245)">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination">
+                <button class="page-btn" disabled>‹ Poprzednia</button>
+                <button class="page-btn active">1</button>
+                <button class="page-btn">2</button>
+                <button class="page-btn">3</button>
+                <button class="page-btn">4</button>
+                <button class="page-btn">5</button>
+                <button class="page-btn">Następna ›</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleFilters() {
+            const content = document.getElementById('filtersContent');
+            const toggleText = document.getElementById('filterToggleText');
+            
+            if (content.style.display === 'none') {
+                content.style.display = 'block';
+                toggleText.textContent = 'Zwiń';
+            } else {
+                content.style.display = 'none';
+                toggleText.textContent = 'Rozwiń';
+            }
+        }
+
+        function resetFilters() {
+            document.getElementById('filterType').value = '';
+            document.getElementById('filterLine').value = '';
+            document.getElementById('filterControl').value = '';
+            document.getElementById('filterOperator').value = '';
+            document.getElementById('filterDateFrom').value = '2024-12-01';
+            document.getElementById('filterDateTo').value = '2024-12-30';
+            document.getElementById('filterOrder').value = '';
+            document.getElementById('filterSearch').value = '';
+            
+            applyFilters();
+        }
+
+        function applyFilters() {
+            const filters = {
+                type: document.getElementById('filterType').value,
+                line: document.getElementById('filterLine').value,
+                control: document.getElementById('filterControl').value,
+                operator: document.getElementById('filterOperator').value,
+                dateFrom: document.getElementById('filterDateFrom').value,
+                dateTo: document.getElementById('filterDateTo').value,
+                order: document.getElementById('filterOrder').value,
+                search: document.getElementById('filterSearch').value
+            };
+            
+            console.log('Zastosowano filtry:', filters);
+            alert('Filtry zastosowane! W Django wykonałby się query do bazy danych.');
+        }
+
+        function exportData() {
+            alert('Eksport do CSV! W Django wygeneruje plik CSV ze wszystkimi danymi.');
+            console.log('Eksportowanie danych...');
+        }
+
+        function viewRecord(id) {
+            alert(`Podgląd szczegółów zapisu #${id}\n\nW Django otworzyłby się modal z pełnymi danymi i zdjęciem.`);
+        }
+
+        function downloadImage(id) {
+            alert(`Pobieranie zdjęcia dla zapisu #${id}`);
+            console.log(`Downloading image for record ${id}`);
+        }
+    </script>
+</body>
+</html>

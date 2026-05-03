@@ -1,0 +1,90 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static admin_modify %}
+
+{% block title %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+<a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+&rsaquo; <a href="{% url 'admin:app_list' app_label='qrp_app' %}">Qrp app</a>
+&rsaquo; <a href="{% url 'admin:qrp_app_systemsettings_changelist' %}">Ustawienia systemowe</a>
+&rsaquo; Import ustawień
+</div>
+{% endblock %}
+
+{% block content %}
+<h1>Import ustawień systemowych</h1>
+
+<p>Wybierz plik JSON wyeksportowany wcześniej z systemu. Możesz użyć trybu testowego, aby sprawdzić poprawność danych przed rzeczywistym importem.</p>
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    
+    <fieldset class="module aligned">
+        <div class="form-row">
+            <div>
+                <label for="{{ form.file.id_for_label }}">{{ form.file.label }}:</label>
+                {{ form.file }}
+                {% if form.file.help_text %}
+                    <p class="help">{{ form.file.help_text }}</p>
+                {% endif %}
+                {% if form.file.errors %}
+                    <ul class="errorlist">
+                        {% for error in form.file.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="form-row">
+            <div>
+                <label for="{{ form.dry_run.id_for_label }}">
+                    {{ form.dry_run }}
+                    {{ form.dry_run.label }}
+                </label>
+                {% if form.dry_run.help_text %}
+                    <p class="help">{{ form.dry_run.help_text }}</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="form-row">
+            <div>
+                <label for="{{ form.overwrite_mode.id_for_label }}">
+                    {{ form.overwrite_mode }}
+                    {{ form.overwrite_mode.label }}
+                </label>
+                {% if form.overwrite_mode.help_text %}
+                    <p class="help">{{ form.overwrite_mode.help_text }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </fieldset>
+    
+    <div class="submit-row">
+        <input type="submit" value="Importuj ustawienia" class="default" />
+        <a href="{% url 'admin:qrp_app_systemsettings_changelist' %}" class="button">Anuluj</a>
+    </div>
+</form>
+
+<h2>Co jest importowane?</h2>
+<ul>
+    <li><strong>Ustawienia systemowe</strong> - wszystkie ustawienia z SystemSettings</li>
+    <li><strong>Rejestratory</strong> - wszystkie rejestratory z ich konfiguracją</li>
+    <li><strong>Linie produkcyjne</strong> - wszystkie linie produkcyjne</li>
+    <li><strong>Dozwolone adresy IP</strong> - lista AllowedIP</li>
+    <li><strong>Typy kontroli</strong> - wszystkie TypKontroli</li>
+    <li><strong>Rodzaje testów</strong> - wszystkie RodzajTestu</li>
+    <li><strong>Zmienne PLC</strong> - wszystkie ZmiennaPLC</li>
+</ul>
+
+<h2>Uwagi</h2>
+<ul>
+    <li>Import aktualizuje istniejące rekordy (na podstawie unikalnych pól) lub tworzy nowe</li>
+    <li>Rekordy są importowane w odpowiedniej kolejności (najpierw typy kontroli i rodzaje testów, potem rejestratory)</li>
+    <li>Zalecane jest użycie trybu testowego przed rzeczywistym importem</li>
+    <li>Wszystkie operacje są wykonywane w transakcji - w razie błędu zmiany są cofane</li>
+</ul>
+{% endblock %}

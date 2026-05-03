@@ -1,0 +1,45 @@
+{% extends 'qrp_app/base.html' %}
+
+{% block title %}Strona Główna - QRP Control System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div style="background: white; border-radius: 1rem; padding: 2rem; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);">
+        <h1 style="font-size: 2rem; font-weight: 900; color: #1e293b; margin-bottom: 1rem;">Witaj w systemie QRP Control</h1>
+        <p style="color: #64748b; font-size: 1.125rem; margin-bottom: 2rem;">
+            System do zarządzania rejestratorami, liniami produkcyjnymi i zmiennymi PLC.
+        </p>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-top: 2rem;">
+            <div style="background: #eff6ff; padding: 1.5rem; border-radius: 0.75rem; border-left: 4px solid #3b82f6;">
+                <h3 style="color: #1e3a8a; margin-bottom: 0.5rem;">Rejestratory</h3>
+                <p style="font-size: 2rem; font-weight: 700; color: #1e40af;">{{ rejestratory.count }}</p>
+                <p style="color: #64748b; font-size: 0.875rem; margin-top: 0.5rem;">Aktywnych rejestratorów</p>
+            </div>
+
+            <div style="background: #f0fdf4; padding: 1.5rem; border-radius: 0.75rem; border-left: 4px solid #22c55e;">
+                <h3 style="color: #166534; margin-bottom: 0.5rem;">Linie Produkcyjne</h3>
+                <p style="font-size: 2rem; font-weight: 700; color: #15803d;">{{ linie.count }}</p>
+                <p style="color: #64748b; font-size: 0.875rem; margin-top: 0.5rem;">Aktywnych linii</p>
+            </div>
+
+            <div style="background: #fef3c7; padding: 1.5rem; border-radius: 0.75rem; border-left: 4px solid #f59e0b;">
+                <h3 style="color: #92400e; margin-bottom: 0.5rem;">Zmienne PLC</h3>
+                <p style="font-size: 2rem; font-weight: 700; color: #b45309;">{{ zmienne.count }}</p>
+                <p style="color: #64748b; font-size: 0.875rem; margin-top: 0.5rem;">Skonfigurowanych zmiennych</p>
+            </div>
+        </div>
+
+        <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #e2e8f0;">
+            <h2 style="font-size: 1.5rem; font-weight: 700; color: #1e293b; margin-bottom: 1rem;">Szybkie linki</h2>
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                <a href="{% url 'qrp_app:measurement' %}" style="background: linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%); color: white; padding: 0.75rem 1.5rem; border-radius: 0.5rem; text-decoration: none; font-weight: 600; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">Rejestracja Pomiarów</a>
+                <a href="{% url 'qrp_app:defect' %}" style="background: linear-gradient(90deg, #dc2626 0%, #ef4444 100%); color: white; padding: 0.75rem 1.5rem; border-radius: 0.5rem; text-decoration: none; font-weight: 600; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">Rejestracja Wad</a>
+                <a href="{% url 'qrp_app:archive' %}" style="background: #64748b; color: white; padding: 0.75rem 1.5rem; border-radius: 0.5rem; text-decoration: none; font-weight: 600; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">Archiwum</a>
+                <a href="/admin/" style="background: #1e293b; color: white; padding: 0.75rem 1.5rem; border-radius: 0.5rem; text-decoration: none; font-weight: 600; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">Panel Administracyjny</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,1340 @@
+{% extends 'qrp_app/base.html' %}
+
+
+{% block extra_css %}
+<style>
+    .defect-container {
+        display: grid;
+        grid-template-columns: 1fr 2fr 1fr;
+        gap: 1.5rem;
+        align-items: stretch;
+        /* Edge compatibility */
+        -ms-grid-columns: 1fr 1.5rem 2fr 1.5rem 1fr;
+    }
+
+    .panel {
+        background: white;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        /* Edge compatibility */
+        box-sizing: border-box;
+        min-height: 0;
+        -ms-flex-direction: column;
+    }
+
+    .panel h2 {
+        font-size: 1.5rem;
+        font-weight: 900;
+        color: #1e293b;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid #e2e8f0;
+    }
+
+    .info-badge {
+        display: inline-block;
+        background: #fef2f2;
+        color: #dc2626;
+        padding: 0.25rem 0.75rem;
+        border-radius: 0.5rem;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 1rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.25rem;
+    }
+
+    .form-group label {
+        display: block;
+        color: #334155;
+        font-size: 0.875rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.5rem;
+    }
+
+    body.dark-mode .form-group label {
+        color: #e2e8f0;
+    }
+
+    .form-group select,
+    .form-group textarea {
+        width: 100%;
+        padding: 0.875rem 1rem;
+        background: #f1f5f9;
+        border: 2px solid #94a3b8;
+        border-radius: 0.5rem;
+        color: #0f172a;
+        font-size: 1rem;
+        font-weight: 500;
+        transition: all 0.3s;
+        font-family: inherit;
+    }
+
+    .form-group select:focus,
+    .form-group textarea:focus {
+        outline: none;
+        border-color: #dc2626;
+        background: white;
+    }
+
+    .form-group textarea {
+        min-height: 131px;
+        resize: vertical;
+    }
+
+    /* Edge specific - min-height dla textarea */
+    @media screen and (-ms-high-contrast: active), (-ms-high-contrast: none) {
+        .form-group textarea {
+            min-height: 134px;
+        }
+    }
+
+    .btn-register {
+        width: 100%;
+        padding: 1rem;
+        background: linear-gradient(90deg, #dc2626 0%, #ef4444 100%);
+        color: white;
+        border: none;
+        border-radius: 0.75rem;
+        font-size: 1rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s;
+        box-shadow: 0 10px 15px -3px rgba(220, 38, 38, 0.4);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .btn-register:hover {
+        box-shadow: 0 20px 25px -5px rgba(220, 38, 38, 0.4);
+        transform: translateY(-2px);
+    }
+
+    .camera-container {
+        background: #000;
+        border-radius: 0.75rem;
+        overflow: hidden;
+        /* Edge compatibility - fallback before aspect-ratio */
+        position: relative;
+        width: 100%;
+        padding-bottom: 56.25%; /* 16/9 = 0.5625 */
+        aspect-ratio: 16/9;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #64748b;
+        font-size: 1rem;
+    }
+
+    .camera-container > img,
+    .camera-container > p {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+    }
+
+    /* Style powiadomień są teraz w base.html */
+
+    .last-record-info {
+        background: #f8fafc;
+        border-radius: 0.75rem;
+        padding: 1rem;
+        margin-top: 0;
+        border: 1px solid #e2e8f0;
+        flex: 1;
+        min-width: 0;
+    }
+
+    .last-record-info h3 {
+        font-size: 0.875rem;
+        font-weight: 700;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.75rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    body.dark-mode .last-record-info h3 {
+        color: #e2e8f0;
+        border-bottom-color: #334155;
+    }
+
+    .info-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+        font-size: 0.875rem;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .info-item:last-child {
+        border-bottom: none;
+    }
+
+    .info-label {
+        color: #64748b;
+        font-weight: 600;
+        min-width: 120px;
+    }
+
+    .info-value {
+        color: #1e293b;
+        font-weight: 500;
+        text-align: right;
+        flex: 1;
+    }
+
+    body.dark-mode .last-record-info {
+        background: #0f172a;
+        border-color: #334155;
+    }
+
+    body.dark-mode .info-label {
+        color: #94a3b8;
+    }
+
+    body.dark-mode .info-value {
+        color: #e2e8f0;
+    }
+
+    body.dark-mode .info-item {
+        border-bottom-color: #334155;
+    }
+
+    /* Ostatnia wada / ostatni rekord - ujednolicenie layoutu z measurement.html */
+    .last-record-wrapper {
+        display: flex;
+        gap: 1rem;
+        align-items: flex-start;
+        flex-direction: column; /* default (horyzontal): jak obecnie "Ostatnia wada" -> zdjęcie nad szczegółami */
+    }
+
+    .last-record-thumbnail {
+        flex-shrink: 0;
+        width: 100%;
+        height: auto;
+        aspect-ratio: 16 / 9;
+        background: #f1f5f9;
+        border-radius: 0.75rem;
+        overflow: hidden;
+        position: relative;
+        border: 2px solid #e2e8f0;
+        margin-bottom: 0; /* info ma własny margin w .last-record-info */
+        transition: all 0.3s;
+    }
+
+    .last-record-thumbnail[onclick] {
+        cursor: pointer;
+    }
+
+    .last-record-thumbnail[onclick]:hover {
+        border-color: #dc2626;
+        transform: scale(1.05);
+    }
+
+    .last-record-thumbnail img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        position: absolute;
+        inset: 0;
+    }
+
+    /* Modal podglądu zdjęcia (powiększenie jak w measurement.html) */
+    .image-modal {
+        display: none;
+        position: fixed;
+        z-index: 10000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.9);
+        cursor: zoom-out;
+    }
+
+    .image-modal.active {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .image-modal-content {
+        max-width: 90%;
+        max-height: 90%;
+        object-fit: contain;
+        transition: transform 0.3s;
+        cursor: zoom-in;
+    }
+
+    .image-modal-content.zoomed {
+        cursor: grab;
+    }
+
+    .image-modal-content.zoomed:active {
+        cursor: grabbing;
+    }
+
+    .image-modal-close {
+        position: absolute;
+        top: 20px;
+        right: 40px;
+        color: #f1f1f1;
+        font-size: 40px;
+        font-weight: bold;
+        cursor: pointer;
+        background: rgba(0, 0, 0, 0.5);
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.3s;
+    }
+
+    .image-modal-close:hover {
+        background: rgba(0, 0, 0, 0.8);
+    }
+
+    /* ≤1200px: miniaturka obok szczegółów (tryb horyzontalny) */
+    @media (max-width: 1200px) {
+        .last-record-wrapper {
+            flex-direction: row;
+        }
+
+        .last-record-thumbnail {
+            width: 150px;
+            height: 100px;
+            aspect-ratio: auto;
+            border-radius: 0.5rem;
+        }
+
+        .last-record-info {
+            margin-top: 0;
+        }
+    }
+
+    .tutorial-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.85);
+        z-index: 9998;
+        display: none;
+    }
+
+    .tutorial-overlay.active {
+        display: block;
+    }
+
+    .tutorial-highlight {
+        position: relative;
+        z-index: 9999 !important;
+        box-shadow: 0 0 0 4px #dc2626, 0 0 0 9999px rgba(0, 0, 0, 0.85) !important;
+        border-radius: 0.5rem;
+    }
+
+    .tutorial-step {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: white;
+        border-radius: 1rem;
+        padding: 2rem;
+        padding-top: 2.5rem;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+        max-width: 420px;
+        width: 90%;
+        max-height: 90vh;
+        overflow-y: auto;
+        overflow-x: visible;
+        z-index: 10000;
+        transition: all 0.5s ease;
+    }
+
+    .tutorial-step-number {
+        position: absolute;
+        top: 5px;
+        left: 2rem;
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 900;
+        font-size: 1.125rem;
+        box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+        z-index: 10001;
+    }
+
+    .tutorial-step h3 {
+        color: #1e293b;
+        font-size: 1.5rem;
+        font-weight: 900;
+        margin-bottom: 1rem;
+        margin-top: 0.5rem;
+    }
+
+    .tutorial-step p {
+        color: #64748b;
+        font-size: 1rem;
+        line-height: 1.6;
+        margin-bottom: 1.5rem;
+    }
+
+    .tutorial-step-hint {
+        background: #fef2f2;
+        border-left: 4px solid #dc2626;
+        padding: 0.75rem 1rem;
+        border-radius: 0.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .tutorial-step-hint p {
+        color: #991b1b;
+        font-size: 0.875rem;
+        margin: 0;
+        font-weight: 600;
+    }
+
+    .tutorial-buttons {
+        display: flex;
+        gap: 1rem;
+        justify-content: space-between;
+    }
+
+    .tutorial-btn {
+        flex: 1;
+        padding: 0.875rem 1.5rem;
+        border-radius: 0.75rem;
+        border: none;
+        font-weight: 700;
+        font-size: 0.875rem;
+        cursor: pointer;
+        transition: all 0.3s;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .tutorial-btn-primary {
+        background: linear-gradient(90deg, #dc2626 0%, #ef4444 100%);
+        color: white;
+    }
+
+    .tutorial-btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(220, 38, 38, 0.4);
+    }
+
+    .tutorial-btn-secondary {
+        background: #f1f5f9;
+        color: #334155;
+    }
+
+    .tutorial-btn-secondary:hover {
+        background: #e2e8f0;
+    }
+
+    .tutorial-btn-skip {
+        background: transparent;
+        color: #64748b;
+        border: 2px solid #e2e8f0;
+    }
+
+    .tutorial-btn-skip:hover {
+        border-color: #cbd5e1;
+    }
+
+    .tutorial-progress {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 1rem;
+        justify-content: center;
+    }
+
+    .progress-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #e2e8f0;
+        transition: all 0.3s;
+    }
+
+    .progress-dot.active {
+        background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+        width: 24px;
+        border-radius: 4px;
+    }
+
+    .tutorial-arrow {
+        position: fixed;
+        width: 60px;
+        height: 60px;
+        z-index: 10001;
+        animation: bounce 2s infinite;
+        display: none;
+    }
+
+    .tutorial-arrow.show {
+        display: block;
+    }
+
+    @keyframes bounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+    }
+
+    .tutorial-arrow svg {
+        width: 100%;
+        height: 100%;
+        filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3));
+    }
+
+    .tutorial-welcome {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: white;
+        border-radius: 1.5rem;
+        padding: 3rem;
+        max-width: 600px;
+        text-align: center;
+        z-index: 10000;
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4);
+    }
+
+    .tutorial-welcome-icon {
+        width: 100px;
+        height: 100px;
+        background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 2rem;
+        box-shadow: 0 10px 30px rgba(220, 38, 38, 0.3);
+    }
+
+    .tutorial-welcome-icon svg {
+        width: 50px;
+        height: 50px;
+        color: white;
+    }
+
+    .tutorial-welcome h2 {
+        font-size: 2rem;
+        font-weight: 900;
+        color: #1e293b;
+        margin-bottom: 1rem;
+    }
+
+    .tutorial-welcome p {
+        font-size: 1.125rem;
+        color: #64748b;
+        line-height: 1.6;
+        margin-bottom: 2rem;
+    }
+
+    .tutorial-welcome-buttons {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+    }
+
+    @media (max-width: 1200px) {
+        .defect-container {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 1200px), (max-height: 900px) and (orientation: portrait) {
+        .container {
+            padding: 1rem;
+        }
+
+        .defect-container {
+            gap: 1rem;
+        }
+
+        .panel {
+            padding: 1rem;
+        }
+
+        .panel h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group textarea {
+            min-height: 115px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .tutorial-step {
+            max-width: 90%;
+            padding: 1.5rem;
+        }
+
+        .tutorial-welcome {
+            max-width: 90%;
+            padding: 2rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="defect-container">
+        <div class="panel">
+            <h2>Rejestracja Wady</h2>
+            
+            <form id="defectForm">
+                <div class="form-group" id="step-line">
+                    <label for="line">Wybór linii</label>
+                    <select id="line" required>
+                        <option value="">Wybierz linię...</option>
+                        {% for linia in linie %}
+                        <option value="{{ linia.id }}" data-camera-url="{{ linia.url_kamery|default:'' }}" {% if auto_select_line and forloop.first %}selected{% endif %}>{{ linia.nazwa }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div id="orderNumberError" class="form-group" style="display: none; background: #fef3c7; border: 2px solid #f59e0b; border-radius: 0.5rem; padding: 0.75rem; margin-bottom: 1rem;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem; color: #92400e;">
+                        <svg style="width: 20px; height: 20px; flex-shrink: 0;" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        <span style="font-size: 0.875rem; font-weight: 600;">Nie udało się automatycznie pobrać numeru zlecenia z PLC. Wprowadź numer ręcznie.</span>
+                    </div>
+                </div>
+
+                <div id="orderNumberGroup" class="form-group" style="display: none;">
+                    <label for="orderNumber">Numer zlecenia <span style="color: #dc2626;">*</span></label>
+                    <input type="text" id="orderNumber" required placeholder="np. 1165382" style="width: 100%; padding: 0.875rem 1rem; background: #f1f5f9; border: 2px solid #94a3b8; border-radius: 0.5rem; color: #0f172a; font-size: 1rem; font-weight: 500; transition: all 0.3s; font-family: inherit;">
+                </div>
+
+                <div class="form-group" id="step-control">
+                    <label for="controlType">Typ kontroli</label>
+                    <select id="controlType" required>
+                        <option value="">Wybierz typ kontroli</option>
+                        {% for typ in typy_kontroli %}
+                        <option value="{{ typ.id }}">{{ typ.nazwa }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group" id="step-description">
+                    <label for="defectDescription">Opis wady</label>
+                    <textarea id="defectDescription" placeholder="Opisz wadę..." required></textarea>
+                </div>
+
+                <div class="form-group" id="step-comment">
+                    <label for="comment">Komentarz (opcjonalnie)</label>
+                    <textarea id="comment" placeholder="Dodaj uwagi..."></textarea>
+                </div>
+
+                <button type="submit" class="btn-register" id="step-submit">
+                    Zarejestruj wadę
+                </button>
+            </form>
+        </div>
+
+        <div class="panel">
+            <h2>Podgląd z Kamery</h2>
+            <div class="camera-container">
+                <img id="cameraImage" src="" alt="Podgląd z kamery" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; display: none;">
+                <p id="cameraPlaceholder" style="margin: 0;">🎥 Live Camera Stream</p>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h2>Ostatnia Wada</h2>
+            <div id="lastRecordContainer">
+            {% if ostatnia_wada %}
+            <div class="last-record-wrapper">
+                <div class="last-record-thumbnail" id="lastRecordThumbnail" {% if ostatnia_wada.zdjecie %}onclick="showImageModal('{{ ostatnia_wada.zdjecie.url }}')"{% endif %}>
+                    {% if ostatnia_wada.zdjecie %}
+                    <img id="lastRecordImage" src="{{ ostatnia_wada.zdjecie.url }}" alt="Ostatnia wada">
+                    {% else %}
+                    <div id="lastRecordImagePlaceholder" style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #64748b;">Brak zdjęcia</div>
+                    {% endif %}
+                </div>
+
+                <div class="last-record-info" id="lastRecordInfo">
+                <h3>Szczegóły wady</h3>
+                <div class="info-item">
+                    <span class="info-label">Data:</span>
+                    <span class="info-value" id="lastRecordData">{{ ostatnia_wada.data_utworzenia|date:"Y-m-d H:i" }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Linia:</span>
+                    <span class="info-value" id="lastRecordLinia">{{ ostatnia_wada.linia_produkcyjna.nazwa }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Typ kontroli:</span>
+                    <span class="info-value" id="lastRecordTypKontroli">{{ ostatnia_wada.typ_kontroli }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Opis wady:</span>
+                    <span class="info-value" id="lastRecordOpisWady">{{ ostatnia_wada.opis_wady|truncatewords:15 }}</span>
+                </div>
+                <div id="lastRecordZlecenieContainer" {% if not ostatnia_wada.numer_zlecenia %}style="display: none;"{% endif %} class="info-item">
+                    <span class="info-label">Zlecenie:</span>
+                    <span class="info-value" id="lastRecordZlecenie">{{ ostatnia_wada.numer_zlecenia|default:'' }}</span>
+                </div>
+                <div id="lastRecordKomentarzContainer" {% if not ostatnia_wada.komentarz %}style="display: none;"{% endif %} class="info-item">
+                    <span class="info-label">Komentarz:</span>
+                    <span class="info-value" id="lastRecordKomentarz">{{ ostatnia_wada.komentarz|truncatewords:15 }}</span>
+                </div>
+            </div>
+            </div>
+            {% else %}
+            <div class="last-record-wrapper">
+                <div class="last-record-thumbnail" id="lastRecordThumbnail">
+                    <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #64748b;">Brak zapisów</div>
+                </div>
+            </div>
+            {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="imageModal" class="image-modal">
+    <span class="image-modal-close" onclick="closeImageModal()">&times;</span>
+    <img id="modalImage" class="image-modal-content" src="" alt="Podgląd zdjęcia">
+</div>
+
+<div class="tutorial-overlay" id="tutorialOverlay"></div>
+
+<div class="tutorial-arrow" id="tutorialArrow">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="#dc2626" stroke-width="3">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+    </svg>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const tutorialSteps = [
+        {
+            element: '#step-line',
+            title: 'Wybór linii produkcyjnej',
+            text: 'Rozpocznij od wyboru linii, na której zaobserwowałeś wadę. Kliknij na listę rozwijaną i wybierz swoją linię.',
+            hint: '💡 Wybór linii jest wymagany do rejestracji wady.',
+            position: 'right'
+        },
+        {
+            element: '#step-description',
+            title: 'Opis wady',
+            text: 'Opisz dokładnie zaobserwowaną wadę. Im bardziej szczegółowy opis, tym lepiej. Uwzględnij lokalizację, rozmiar i charakterystykę wady.',
+            hint: '⚠️ Opis wady musi mieć minimum 10 znaków. Bądź precyzyjny!',
+            position: 'right'
+        },
+        {
+            element: '#step-comment',
+            title: 'Dodatkowe uwagi (opcjonalnie)',
+            text: 'Możesz dodać dodatkowe informacje, okoliczności lub kontekst dotyczący wady. To pole jest opcjonalne, ale może być bardzo pomocne przy analizie.',
+            hint: '💡 Opisz okoliczności wystąpienia wady, częstotliwość, itp.',
+            position: 'right'
+        },
+        {
+            element: '#step-submit',
+            title: 'Rejestracja wady',
+            text: 'Po wypełnieniu wszystkich wymaganych pól, kliknij ten przycisk aby zapisać wadę. Zostanie automatycznie zrobione zdjęcie z kamery.',
+            hint: '✅ Sprawdź wszystkie dane przed zatwierdzeniem!',
+            position: 'top'
+        }
+    ];
+
+    let currentStep = 0;
+    let tutorialActive = false;
+
+    function startTutorial() {
+        tutorialActive = true;
+        showWelcomeScreen();
+    }
+
+    function showWelcomeScreen() {
+        const overlay = document.getElementById('tutorialOverlay');
+        overlay.classList.add('active');
+        
+        const welcome = document.createElement('div');
+        welcome.className = 'tutorial-welcome';
+        welcome.innerHTML = `
+            <div class="tutorial-welcome-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+            </div>
+            <h2>Witaj w samouczku rejestracji wad!</h2>
+            <p>Poprowadzimy Cię krok po kroku przez proces rejestracji wady. Samouczek zajmie około 2 minut.</p>
+            <div class="tutorial-welcome-buttons">
+                <button class="tutorial-btn tutorial-btn-skip" onclick="skipTutorial()">Pomiń</button>
+                <button class="tutorial-btn tutorial-btn-primary" onclick="beginTutorial()">Rozpocznij samouczek</button>
+            </div>
+        `;
+        
+        document.body.appendChild(welcome);
+    }
+
+    function beginTutorial() {
+        document.querySelector('.tutorial-welcome').remove();
+        currentStep = 0;
+        showStep(currentStep);
+    }
+
+    function showStep(stepIndex) {
+        const step = tutorialSteps[stepIndex];
+        const element = document.querySelector(step.element);
+        
+        if (!element) return;
+
+        element.classList.add('tutorial-highlight');
+        
+        const rect = element.getBoundingClientRect();
+        const stepBox = createStepBox(step, stepIndex);
+        
+        document.body.appendChild(stepBox);
+        
+        const arrow = document.getElementById('tutorialArrow');
+        arrow.classList.add('show');
+        arrow.style.left = Math.max(10, rect.left - 70) + 'px';
+        arrow.style.top = (rect.top + 20) + 'px';
+        
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function createStepBox(step, index) {
+        const box = document.createElement('div');
+        box.className = 'tutorial-step';
+        box.id = 'currentStepBox';
+        
+        const progressDots = tutorialSteps.map((_, i) => 
+            `<div class="progress-dot ${i === index ? 'active' : ''}"></div>`
+        ).join('');
+        
+        box.innerHTML = `
+            <div class="tutorial-step-number">${index + 1}</div>
+            <h3>${step.title}</h3>
+            <p>${step.text}</p>
+            ${step.hint ? `<div class="tutorial-step-hint"><p>${step.hint}</p></div>` : ''}
+            <div class="tutorial-buttons">
+                ${index > 0 ? '<button class="tutorial-btn tutorial-btn-secondary" onclick="previousStep()">Wstecz</button>' : '<button class="tutorial-btn tutorial-btn-skip" onclick="skipTutorial()">Pomiń</button>'}
+                <button class="tutorial-btn tutorial-btn-primary" onclick="${index < tutorialSteps.length - 1 ? 'nextStep()' : 'completeTutorial()'}">
+                    ${index < tutorialSteps.length - 1 ? 'Dalej' : 'Zakończ'}
+                </button>
+            </div>
+            <div class="tutorial-progress">
+                ${progressDots}
+            </div>
+        `;
+        
+        return box;
+    }
+
+    function nextStep() {
+        clearStep();
+        currentStep++;
+        if (currentStep < tutorialSteps.length) {
+            showStep(currentStep);
+        }
+    }
+
+    function previousStep() {
+        clearStep();
+        currentStep--;
+        if (currentStep >= 0) {
+            showStep(currentStep);
+        }
+    }
+
+    function clearStep() {
+        const stepBox = document.getElementById('currentStepBox');
+        if (stepBox) stepBox.remove();
+        
+        document.querySelectorAll('.tutorial-highlight').forEach(el => {
+            el.classList.remove('tutorial-highlight');
+        });
+        
+        document.getElementById('tutorialArrow').classList.remove('show');
+    }
+
+    function skipTutorial() {
+        clearStep();
+        document.getElementById('tutorialOverlay').classList.remove('active');
+        const welcome = document.querySelector('.tutorial-welcome');
+        if (welcome) welcome.remove();
+        tutorialActive = false;
+    }
+
+    function completeTutorial() {
+        clearStep();
+        document.getElementById('tutorialOverlay').classList.remove('active');
+        tutorialActive = false;
+        
+        showSuccessNotification('🎉 Gratulacje! Ukończyłeś samouczek. Teraz możesz samodzielnie rejestrować wady w systemie QRP.', 5000);
+    }
+
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('tour') === 'true') {
+        startTutorial();
+    }
+
+    // Inicjalizacja wyświetlania kamery z rejestratora
+    let cameraRefreshInterval = null;
+    const cameraImage = document.getElementById('cameraImage');
+    const cameraPlaceholder = document.getElementById('cameraPlaceholder');
+    const lineSelect = document.getElementById('line');
+    
+    // Pobierz URL kamery z rejestratora (pierwszy aktywny rejestrator)
+    // eslint-disable-next-line
+    const rejestratoryUrls = [
+        // @ts-ignore - Django template syntax
+        {% for rejestrator in rejestratory %}
+        '{{ rejestrator.url_kamery }}',
+        {% endfor %}
+    ].filter(url => url && url.trim() !== '');
+    
+    const cameraUrlFromRejestrator = rejestratoryUrls.length > 0 ? rejestratoryUrls[0] : null;
+
+    function updateCameraStream() {
+        // Używaj kamery z rejestratora (niezależnie od wyboru linii)
+        const cameraUrl = cameraUrlFromRejestrator;
+        
+        if (cameraUrl) {
+            // Dodaj timestamp do URL, aby uniknąć cache
+            const separator = cameraUrl.includes('?') ? '&' : '?';
+            const urlWithTimestamp = `${cameraUrl}${separator}timestamp=${Date.now()}`;
+            cameraImage.src = urlWithTimestamp;
+            cameraImage.style.display = 'block';
+            cameraPlaceholder.style.display = 'none';
+            cameraImage.onerror = function() {
+                cameraImage.style.display = 'none';
+                cameraPlaceholder.style.display = 'block';
+            };
+        } else {
+            cameraImage.style.display = 'none';
+            cameraPlaceholder.style.display = 'block';
+            if (cameraRefreshInterval) {
+                clearInterval(cameraRefreshInterval);
+                cameraRefreshInterval = null;
+            }
+        }
+    }
+
+    function startCameraRefresh() {
+        if (cameraRefreshInterval) {
+            clearInterval(cameraRefreshInterval);
+        }
+        updateCameraStream();
+        cameraRefreshInterval = setInterval(updateCameraStream, 1000);
+    }
+
+    function stopCameraRefresh() {
+        if (cameraRefreshInterval) {
+            clearInterval(cameraRefreshInterval);
+            cameraRefreshInterval = null;
+        }
+    }
+
+    // Funkcja do pobierania numeru zlecenia z PLC
+    async function fetchOrderNumber(lineId) {
+        const orderNumberInput = document.getElementById('orderNumber');
+        const orderNumberGroup = document.getElementById('orderNumberGroup');
+        const orderNumberError = document.getElementById('orderNumberError');
+        
+        if (!lineId) {
+            // Ukryj pole numeru zlecenia jeśli linia nie jest wybrana
+            orderNumberGroup.style.display = 'none';
+            orderNumberError.style.display = 'none';
+            return;
+        }
+
+        // Pokaż pole numeru zlecenia (zawsze gdy linia jest wybrana)
+        orderNumberGroup.style.display = 'block';
+
+        try {
+            const response = await fetch(`/api/order-number/?line_id=${lineId}`);
+            const data = await response.json();
+            
+            if (data.success && data.order_number) {
+                // Udało się pobrać - zawsze ustaw wartość przy zmianie linii
+                orderNumberInput.value = data.order_number;
+                orderNumberError.style.display = 'none';
+            } else {
+                // Nie udało się pobrać - pokaż komunikat (pole już jest widoczne)
+                orderNumberError.style.display = 'block';
+                // Ukryj komunikat po 10 sekundach
+                setTimeout(() => {
+                    orderNumberError.style.display = 'none';
+                }, 10000);
+            }
+        } catch (error) {
+            // Błąd sieci - pokaż komunikat błędu (pole już jest widoczne)
+            orderNumberError.style.display = 'block';
+            setTimeout(() => {
+                orderNumberError.style.display = 'none';
+            }, 10000);
+        }
+    }
+
+    // Inicjalizuj kamerę z rejestratora przy starcie (niezależnie od wyboru linii)
+    if (cameraUrlFromRejestrator) {
+        startCameraRefresh();
+    }
+
+    lineSelect.addEventListener('change', function() {
+        // Kamera jest przypisana do rejestratora, nie zmienia się przy zmianie linii
+        // Pobierz numer zlecenia z PLC dla wybranej linii
+        fetchOrderNumber(lineSelect.value);
+        // Zaktualizuj opcje formularza na podstawie rejestratora przypisanego do linii
+        updateFormOptions(lineSelect.value);
+    });
+
+    // Funkcja do aktualizowania opcji formularza na podstawie linii
+    async function updateFormOptions(lineId) {
+        if (!lineId) return;
+        
+        try {
+            const response = await fetch(`/api/line/${lineId}/options/`);
+            const data = await response.json();
+            
+            if (data.success) {
+                // Aktualizuj typy kontroli
+                const controlTypeSelect = document.getElementById('controlType');
+                if (controlTypeSelect && data.typy_kontroli) {
+                    const currentValue = controlTypeSelect.value;
+                    controlTypeSelect.innerHTML = '<option value="">Wybierz typ kontroli</option>';
+                    data.typy_kontroli.forEach(function(typ) {
+                        const option = document.createElement('option');
+                        option.value = typ.id;
+                        option.textContent = typ.nazwa;
+                        controlTypeSelect.appendChild(option);
+                    });
+                    // Przywróć poprzednią wartość jeśli jest nadal dostępna
+                    if (currentValue) {
+                        controlTypeSelect.value = currentValue;
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Error updating form options:', error);
+        }
+    }
+
+    // Pobierz numer zlecenia jeśli linia jest już wybrana przy starcie
+    if (lineSelect.value) {
+        fetchOrderNumber(lineSelect.value);
+        updateFormOptions(lineSelect.value);
+    }
+
+    document.getElementById('defectForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const form = e.target;
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalText = submitBtn.textContent;
+        
+        // Walidacja numeru zlecenia
+        const orderNumberGroup = document.getElementById('orderNumberGroup');
+        const orderNumberInput = document.getElementById('orderNumber');
+        
+        if (orderNumberGroup.style.display !== 'none') {
+            const orderNumber = orderNumberInput.value.trim();
+            if (!orderNumber) {
+                showErrorNotification('Numer zlecenia jest wymagany!');
+                orderNumberInput.focus();
+                orderNumberInput.style.borderColor = '#dc2626';
+                return;
+            }
+            orderNumberInput.style.borderColor = '#94a3b8';
+        }
+        
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Zapisywanie...';
+
+        const formData = new URLSearchParams();
+        formData.append('line', document.getElementById('line').value);
+        formData.append('controlType', document.getElementById('controlType').value);
+        formData.append('defectDescription', document.getElementById('defectDescription').value);
+        formData.append('comment', document.getElementById('comment').value);
+        const orderNumber = document.getElementById('orderNumber').value.trim();
+        if (orderNumber) {
+            formData.append('orderNumber', orderNumber);
+        } else {
+            // Jeśli pole jest widoczne ale puste, to błąd (powinno być już sprawdzone wyżej, ale na wszelki wypadek)
+            if (orderNumberGroup.style.display !== 'none') {
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+                showErrorNotification('Numer zlecenia jest wymagany!');
+                return;
+            }
+        }
+        
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
+        if (!csrfToken) {
+            showErrorNotification('Błąd: Brak tokenu CSRF');
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/defect/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': csrfToken.value
+                },
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                showSuccessNotification('Wada została zarejestrowana pomyślnie!');
+                form.reset();
+                // Ukryj pole numeru zlecenia po resetowaniu formularza
+                const orderNumberGroup = document.getElementById('orderNumberGroup');
+                const orderNumberError = document.getElementById('orderNumberError');
+                if (orderNumberGroup) orderNumberGroup.style.display = 'none';
+                if (orderNumberError) orderNumberError.style.display = 'none';
+                if (data.record) {
+                    updateLastRecord(data.record);
+                }
+            } else {
+                showErrorNotification(data.message || 'Nie udało się zapisać wady');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showErrorNotification('Błąd połączenia z serwerem');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
+        }
+    });
+
+    function updateLastRecord(record) {
+        const container = document.getElementById('lastRecordContainer');
+        if (!container) return;
+
+        const thumb = container.querySelector('#lastRecordThumbnail');
+        if (thumb) {
+            const oldImg = thumb.querySelector('#lastRecordImage');
+            const oldPlaceholder = thumb.querySelector('#lastRecordImagePlaceholder');
+            
+            if (record.zdjecie_url) {
+                thumb.onclick = () => showImageModal(record.zdjecie_url);
+                if (oldPlaceholder) oldPlaceholder.remove();
+                if (oldImg) {
+                    oldImg.src = record.zdjecie_url;
+                } else {
+                    const img = document.createElement('img');
+                    img.id = 'lastRecordImage';
+                    img.src = record.zdjecie_url;
+                    img.alt = 'Ostatnia wada';
+                    thumb.innerHTML = '';
+                    thumb.appendChild(img);
+                }
+            } else {
+                thumb.onclick = null;
+                if (oldImg) oldImg.remove();
+                if (!oldPlaceholder) {
+                    const placeholder = document.createElement('div');
+                    placeholder.id = 'lastRecordImagePlaceholder';
+                    placeholder.style.cssText = 'position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #64748b;';
+                    placeholder.textContent = 'Brak zdjęcia';
+                    thumb.innerHTML = '';
+                    thumb.appendChild(placeholder);
+                }
+            }
+        }
+
+        if (document.getElementById('lastRecordData')) {
+            document.getElementById('lastRecordData').textContent = record.data;
+            document.getElementById('lastRecordLinia').textContent = record.linia;
+            document.getElementById('lastRecordTypKontroli').textContent = record.typ_kontroli;
+            document.getElementById('lastRecordOpisWady').textContent = record.opis_wady;
+            
+            const zlecenieContainer = document.getElementById('lastRecordZlecenieContainer');
+            const komentarzContainer = document.getElementById('lastRecordKomentarzContainer');
+            
+            if (record.numer_zlecenia) {
+                document.getElementById('lastRecordZlecenie').textContent = record.numer_zlecenia;
+                if (zlecenieContainer) zlecenieContainer.style.display = '';
+            } else {
+                if (zlecenieContainer) zlecenieContainer.style.display = 'none';
+            }
+            
+            if (record.komentarz) {
+                document.getElementById('lastRecordKomentarz').textContent = record.komentarz;
+                if (komentarzContainer) komentarzContainer.style.display = '';
+            } else {
+                if (komentarzContainer) komentarzContainer.style.display = 'none';
+            }
+        } else {
+            const infoDiv = document.createElement('div');
+            infoDiv.className = 'last-record-info';
+            infoDiv.id = 'lastRecordInfo';
+            infoDiv.innerHTML = `
+                <h3>Szczegóły wady</h3>
+                <div class="info-item">
+                    <span class="info-label">Data:</span>
+                    <span class="info-value" id="lastRecordData">${record.data}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Linia:</span>
+                    <span class="info-value" id="lastRecordLinia">${record.linia}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Typ kontroli:</span>
+                    <span class="info-value" id="lastRecordTypKontroli">${record.typ_kontroli}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Opis wady:</span>
+                    <span class="info-value" id="lastRecordOpisWady">${record.opis_wady}</span>
+                </div>
+                ${record.numer_zlecenia ? `<div class="info-item" id="lastRecordZlecenieContainer"><span class="info-label">Zlecenie:</span><span class="info-value" id="lastRecordZlecenie">${record.numer_zlecenia}</span></div>` : ''}
+                ${record.komentarz ? `<div class="info-item" id="lastRecordKomentarzContainer"><span class="info-label">Komentarz:</span><span class="info-value" id="lastRecordKomentarz">${record.komentarz}</span></div>` : ''}
+            `;
+            container.appendChild(infoDiv);
+        }
+    }
+
+    // Funkcje powiadomień są teraz zdefiniowane w base.html
+
+    function showImageModal(imageUrl) {
+        if (!imageUrl) return;
+        const modal = document.getElementById('imageModal');
+        const img = document.getElementById('modalImage');
+        img.src = imageUrl;
+        img.classList.remove('zoomed');
+        img.style.transform = '';
+        img.dataset.tx = '0';
+        img.dataset.ty = '0';
+        modal.classList.add('active');
+    }
+
+    function closeImageModal() {
+        const modal = document.getElementById('imageModal');
+        const img = document.getElementById('modalImage');
+        modal.classList.remove('active');
+        img.classList.remove('zoomed');
+        img.style.transform = '';
+        img.dataset.tx = '0';
+        img.dataset.ty = '0';
+    }
+
+    function setImageTransform(img) {
+        const tx = Number(img.dataset.tx || 0);
+        const ty = Number(img.dataset.ty || 0);
+        const zoom = img.classList.contains('zoomed') ? 3 : 1;
+        img.style.transform = `translate(${tx}px, ${ty}px) scale(${zoom})`;
+    }
+
+    function toggleZoom() {
+        const img = document.getElementById('modalImage');
+        const nextZoomed = !img.classList.contains('zoomed');
+        img.classList.toggle('zoomed', nextZoomed);
+        img.dataset.tx = '0';
+        img.dataset.ty = '0';
+        setImageTransform(img);
+    }
+
+    (function attachModalPanZoom() {
+        const img = document.getElementById('modalImage');
+        if (!img) return;
+
+        // Zoom tylko na dwuklik
+        img.addEventListener('dblclick', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleZoom();
+        });
+
+        let dragging = false;
+        let startX = 0;
+        let startY = 0;
+        let originTx = 0;
+        let originTy = 0;
+
+        function startDrag(clientX, clientY) {
+            if (!img.classList.contains('zoomed')) return;
+            dragging = true;
+            startX = clientX;
+            startY = clientY;
+            originTx = Number(img.dataset.tx || 0);
+            originTy = Number(img.dataset.ty || 0);
+        }
+
+        function moveDrag(clientX, clientY) {
+            if (!dragging) return;
+            img.dataset.tx = String(originTx + (clientX - startX));
+            img.dataset.ty = String(originTy + (clientY - startY));
+            setImageTransform(img);
+        }
+
+        function endDrag() {
+            dragging = false;
+        }
+
+        img.addEventListener('mousedown', (e) => {
+            if (e.button !== 0) return;
+            e.preventDefault();
+            startDrag(e.clientX, e.clientY);
+        });
+        window.addEventListener('mousemove', (e) => moveDrag(e.clientX, e.clientY));
+        window.addEventListener('mouseup', endDrag);
+
+        // Touch
+        img.addEventListener('touchstart', (e) => {
+            if (!img.classList.contains('zoomed')) return;
+            const t = e.touches[0];
+            if (!t) return;
+            startDrag(t.clientX, t.clientY);
+        }, { passive: true });
+        img.addEventListener('touchmove', (e) => {
+            if (!dragging) return;
+            const t = e.touches[0];
+            if (!t) return;
+            moveDrag(t.clientX, t.clientY);
+        }, { passive: true });
+        img.addEventListener('touchend', endDrag);
+    })();
+
+    const imageModal = document.getElementById('imageModal');
+    if (imageModal) {
+        imageModal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeImageModal();
+            }
+        });
+    }
+</script>
+{% endblock %}

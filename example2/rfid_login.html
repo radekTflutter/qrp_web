@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}QRP Platform{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/rfid_style.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div style="max-width: 32rem; width: 100%;">
+        
+        <div id="waitingState" class="card">
+            <div class="icon-container">
+                <div class="icon-ping">
+                    <div class="ping-circle"></div>
+                </div>
+                <div class="icon-circle">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.288 15.038a5.25 5.25 0 0 1 7.424 0M5.106 11.856c3.807-3.808 9.98-3.808 13.788 0M1.924 8.674c5.565-5.565 14.587-5.565 20.152 0M12.53 18.22l-.53.53-.53-.53a.75.75 0 0 1 1.06 0z" />
+                    </svg>
+                </div>
+            </div>
+            
+            <h1>Przyłóż kartę do czytnika</h1>
+            <p class="subtitle cyan">Oczekiwanie na sygnał RFID</p>
+            
+            <div class="loading-dots">
+                <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+            </div>
+        </div>
+
+        <div id="processingState" class="card hidden">
+            <div class="spinner"></div>
+            <h1>PRZETWARZANIE</h1>
+            <p class="subtitle amber">Weryfikacja karty...</p>
+        </div>
+
+        <div id="registrationState" class="card hidden">
+            <div class="icon-circle purple" style="width: 4rem; height: 4rem; margin: 0 auto 1rem;">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 9.374 21c-2.331 0-4.512-.645-6.374-1.766Z" />
+                </svg>
+            </div>
+            <h2>NOWA KARTA</h2>
+            <p class="subtitle purple" style="margin-bottom: 1rem;">Wymagana rejestracja</p>
+            
+            <div id="errorAlert" class="alert hidden" style="font-size: 0.85rem; padding: 0.75rem;">
+                <p id="errorMessage">Błąd</p>
+            </div>
+
+            <div class="form-group">
+                <label style="text-align: left; display: block; margin-bottom: 5px; color: #64748b; font-size: 0.9rem;">Login</label>
+                <input type="text" id="userNameInput" 
+                       placeholder="np. jan.kowalski" 
+                       class="form-input" 
+                       autocomplete="off">
+            </div>
+
+            <div class="form-group">
+                <label style="text-align: left; display: block; margin-bottom: 5px; color: #64748b; font-size: 0.9rem;">Numer KJ</label>
+                <div class="input-group" id="kjInputGroup">
+                    <div class="input-prefix">KJ</div>
+                    <input type="tel" id="kjNumberInput" 
+                           class="form-input-group" 
+                           placeholder="np. 10 (max 3 cyfry)" 
+                           maxlength="3" 
+                           pattern="\d*">
+                </div>
+            </div>
+
+            <div class="btn-group">
+                <button id="registerButton" class="btn btn-register">ZAREJESTRUJ</button>
+                <button id="cancelButton" class="btn btn-cancel">ANULUJ</button>
+            </div>
+        </div>
+
+        <div id="successState" class="card hidden">
+            <div class="icon-circle success" style="width: 5rem; height: 5rem; margin: 0 auto 1rem;">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                </svg>
+            </div>
+            <h1>ZALOGOWANO</h1>
+            <p class="subtitle emerald" id="successMessage">Witaj!</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const LOGIN_URL = "{% url 'qrp:api_login' %}";
+    const REGISTER_URL = "{% url 'qrp:api_register' %}";
+    const CSRF_TOKEN = "{{ csrf_token }}";
+</script>
+<script src="{% static 'js/rfid_logic.js' %}"></script>
+{% endblock %}
